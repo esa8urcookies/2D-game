@@ -29,9 +29,16 @@ Then open <http://localhost:8000> in your browser.
 
 - Internal resolution is **1920x1080**; the canvas scales to fit the
   browser window while preserving 16:9.
-- Character/monster sprites are authored at **182x182** pixels. For now
-  they are drawn procedurally in `src/assets/ProceduralSprites.js` and
-  can later be swapped for image files of the same size.
+- Character/monster sprites are authored at **182x182** pixels. Enemies
+  are drawn procedurally in `src/assets/ProceduralSprites.js`; the
+  player uses a procedural 4-direction pixel-art walking sheet from
+  `src/assets/PixelHeroSheet.js`.
+- To use custom player art, save a PNG at
+  `src/assets/images/player-sheet.png` with 4 rows (down, left, up,
+  right) and 4 frames per row (frame 0 = standing), then adjust
+  `CUSTOM_SHEET` in `PixelHeroSheet.js` to match its cell size. The
+  game loads it automatically and falls back to the procedural sheet
+  if the file is missing.
 - Collision shapes are intentionally smaller than sprites so the game
   feels fair.
 
@@ -56,4 +63,5 @@ src/systems/CollisionSystem.js   Projectile/enemy/player collisions
 src/systems/WeaponSystem.js      Auto-fires at the nearest enemy
 src/systems/UISystem.js          Title, timer, kills, FPS HUD
 src/assets/ProceduralSprites.js  182x182 placeholder sprites
+src/assets/PixelHeroSheet.js     Player walk-cycle sprite sheet
 ```

@@ -98,19 +98,23 @@ export class Renderer {
     const ctx = this.ctx;
     const screen = camera.worldToScreen(player.x, player.y);
     const half = player.spriteSize / 2;
+    const frame = player.getFrame();
 
     ctx.save();
-    ctx.translate(screen.x, screen.y);
-
-    // Flip horizontally when facing left.
-    ctx.scale(player.facing, 1);
 
     // Blink while the post-hit grace period is active.
     if (player.hitTimer > 0 && Math.floor(player.hitTimer * 12) % 2 === 0) {
       ctx.globalAlpha = 0.35;
     }
 
-    ctx.drawImage(player.sprite, -half, -half);
+    // Keep pixel art crisp when the frame is scaled to sprite size.
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      frame.image,
+      frame.sx, frame.sy, frame.size, frame.size,
+      screen.x - half, screen.y - half, player.spriteSize, player.spriteSize
+    );
+
     ctx.restore();
   }
 
