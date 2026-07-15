@@ -48,20 +48,26 @@ Then open <http://localhost:8000> in your browser.
 index.html                       Canvas element + module entry
 styles.css                       Fullscreen layout and canvas centering
 src/main.js                      Entry point
-src/core/Game.js                 Game state + main loop (delta time)
-src/core/Constants.js            Internal resolution constants
-src/core/Input.js                Keyboard input (WASD / arrows)
-src/core/Camera.js               Follows the player
-src/core/MathUtils.js            Vector/math helpers
-src/entities/Player.js           Player movement + contact feedback
-src/entities/Enemy.js            Enemy types (slime, bat) + chasing
-src/entities/Projectile.js       Auto-attack projectiles
+src/config/GameConfig.js         ALL gameplay numbers in one place
+src/core/Game.js                 Game states + main loop (delta time)
+src/core/Input.js                Keyboard + mouse input
+src/core/Camera.js               Follows the player, shake, culling
+src/core/MathUtils.js            Vector/math/format helpers
+src/core/DrawUtils.js            Shared sprite + bar drawing helpers
+src/entities/Entity.js           Base class: position, velocity,
+                                 radius, update, render
+src/entities/Player.js           Movement, health, walk animation
+src/entities/Enemy.js            Chasing, knockback, health bar
+src/entities/Projectile.js       Auto-attack shots
+src/entities/FloatingText.js     Rising damage numbers
 src/entities/XPGem.js            (later step)
-src/systems/Renderer.js          Draws background + entities
+src/systems/Renderer.js          Background + draw order + culling
 src/systems/Spawner.js           Off-screen ring spawning + ramp-up
 src/systems/CollisionSystem.js   Projectile/enemy/player collisions
 src/systems/WeaponSystem.js      Auto-fires at the nearest enemy
-src/systems/UISystem.js          Title, timer, kills, FPS HUD
-src/assets/ProceduralSprites.js  182x182 placeholder sprites
+src/systems/UISystem.js          HP bar, timer, kills HUD
+src/systems/MenuSystem.js        Title, how-to, pause, game over
+src/assets/ProceduralSprites.js  182x182 enemy placeholder sprites
 src/assets/PixelHeroSheet.js     Player walk-cycle sprite sheet
+src/assets/PixelFont.js          5x7 pixel font for all text
 ```

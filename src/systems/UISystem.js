@@ -2,9 +2,10 @@
 // the same pixel font as the menu so everything matches.
 // Everything is positioned in the internal 1920x1080 space.
 
-import { GAME_WIDTH, GAME_HEIGHT } from '../core/Constants.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 import { formatTime } from '../core/MathUtils.js';
 import { drawPixelText } from '../assets/PixelFont.js';
+import { drawBar, healthColor } from '../core/DrawUtils.js';
 
 export class UISystem {
   constructor(ctx) {
@@ -62,23 +63,10 @@ export class UISystem {
 
   /** The big HP bar, top left, in the same chunky pixel style. */
   drawHealthBar(ctx, player) {
-    const x = 24;
-    const y = 28;
-    const width = 440;
-    const height = 40;
-    const border = 6;
-    const percent = Math.max(0, player.health / player.maxHealth);
-    const color = percent > 0.5 ? '#5cd65c' : percent > 0.25 ? '#ffd54f' : '#e04040';
+    const percent = player.health / player.maxHealth;
 
-    // Outline, background, then fill.
-    ctx.fillStyle = '#16161f';
-    ctx.fillRect(x - border, y - border, width + border * 2, height + border * 2);
-    ctx.fillStyle = '#2a2d38';
-    ctx.fillRect(x, y, width, height);
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, width * percent, height);
-
-    drawPixelText(ctx, `HP ${Math.ceil(player.health)}/${player.maxHealth}`, x + 14, y + 6, {
+    drawBar(ctx, 24, 28, 440, 40, percent, healthColor(percent), 6);
+    drawPixelText(ctx, `HP ${Math.ceil(player.health)}/${player.maxHealth}`, 38, 34, {
       scale: 4,
       color: '#ffffff',
       outline: '#16161f',

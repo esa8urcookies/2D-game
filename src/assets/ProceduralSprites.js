@@ -3,7 +3,7 @@
 // then reused every frame like a normal image. When real art is
 // ready, these can be swapped for PNG files of the same size.
 
-export const SPRITE_SIZE = 182;
+import { SPRITE_SIZE } from '../config/GameConfig.js';
 
 // Each sprite is only built once, then shared by every entity that
 // uses it. Drawing 200 slimes still means only one slime canvas.

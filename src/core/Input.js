@@ -4,7 +4,7 @@
 // mouse position must be converted back to 1920x1080 space).
 
 import { normalize } from './MathUtils.js';
-import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
 export class Input {
   constructor() {

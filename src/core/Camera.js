@@ -2,7 +2,7 @@
 // It follows a target (the player), converts world coordinates into
 // screen coordinates, and can shake briefly for impact feedback.
 
-import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
 export class Camera {
   constructor() {
@@ -51,5 +51,20 @@ export class Camera {
       x: worldX - this.x,
       y: worldY - this.y,
     };
+  }
+
+  /**
+   * Is this world position on screen (or within `margin` px of it)?
+   * Used both for skipping off-screen drawing and for cleanup.
+   */
+  isVisible(worldX, worldY, margin = 0) {
+    const x = worldX - this.x;
+    const y = worldY - this.y;
+    return (
+      x > -margin &&
+      x < GAME_WIDTH + margin &&
+      y > -margin &&
+      y < GAME_HEIGHT + margin
+    );
   }
 }

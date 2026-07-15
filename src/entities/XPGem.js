@@ -2,14 +2,11 @@
 // Placeholder for a later step: defeated enemies will drop gems that
 // the player collects to level up.
 
-export class XPGem {
-  constructor(x, y, value = 1) {
-    this.x = x;
-    this.y = y;
-    this.value = value;
-  }
+import { Entity } from './Entity.js';
 
-  update(deltaTime, player) {
-    // Implemented in a later step.
+export class XPGem extends Entity {
+  constructor(x, y, value = 1) {
+    super(x, y, 30);
+    this.value = value;
   }
 }

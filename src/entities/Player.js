@@ -5,32 +5,27 @@
 // procedural pixel art by default, or a custom PNG if one exists
 // (see CUSTOM_SHEET in PixelHeroSheet.js).
 
+import { Entity } from './Entity.js';
 import {
   createHeroSheet,
   tryLoadCustomSheet,
   HERO_SHEET_META,
   CUSTOM_SHEET,
 } from '../assets/PixelHeroSheet.js';
-import { SPRITE_SIZE } from '../assets/ProceduralSprites.js';
+import { PLAYER_CONFIG, SPRITE_SIZE } from '../config/GameConfig.js';
+import { drawBar, healthColor } from '../core/DrawUtils.js';
 
-export class Player {
+export class Player extends Entity {
   constructor(x, y) {
-    // World position (center of the player).
-    this.x = x;
-    this.y = y;
+    super(x, y, PLAYER_CONFIG.collisionRadius);
 
-    this.moveSpeed = 420; // pixels per second
-
-    this.maxHealth = 100;
-    this.health = 100;
+    this.moveSpeed = PLAYER_CONFIG.moveSpeed;
+    this.maxHealth = PLAYER_CONFIG.maxHealth;
+    this.health = PLAYER_CONFIG.maxHealth;
 
     // Character level. Leveling up arrives with the XP system; it
     // already exists so the game-over screen can show it.
     this.level = 1;
-
-    // The collision circle is much smaller than the 182x182 sprite
-    // so near-misses feel fair instead of frustrating.
-    this.collisionRadius = 45;
 
     this.spriteSize = SPRITE_SIZE;
 
@@ -54,11 +49,11 @@ export class Player {
     this.hitTimer = 0;
   }
 
-  update(deltaTime, input) {
-    const move = input.getMovementDirection();
-
-    this.x += move.x * this.moveSpeed * deltaTime;
-    this.y += move.y * this.moveSpeed * deltaTime;
+  update(deltaTime, game) {
+    const move = game.input.getMovementDirection();
+    this.velocityX = move.x * this.moveSpeed;
+    this.velocityY = move.y * this.moveSpeed;
+    super.update(deltaTime, game);
 
     this.isMoving = move.x !== 0 || move.y !== 0;
 
@@ -88,11 +83,37 @@ export class Player {
       : 0; // standing still shows the neutral pose
 
     return {
-      image: this.sheet,
       sx: column * frameSize,
       sy: rows[this.direction] * frameSize,
       size: frameSize,
     };
+  }
+
+  render(ctx, camera) {
+    const screen = camera.worldToScreen(this.x, this.y);
+    const half = this.spriteSize / 2;
+    const frame = this.getFrame();
+
+    ctx.save();
+
+    // Blink while the invincibility window is active.
+    if (this.hitTimer > 0 && Math.floor(this.hitTimer * 12) % 2 === 0) {
+      ctx.globalAlpha = 0.35;
+    }
+
+    // Keep pixel art crisp when the frame is scaled to sprite size.
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(
+      this.sheet,
+      frame.sx, frame.sy, frame.size, frame.size,
+      screen.x - half, screen.y - half, this.spriteSize, this.spriteSize
+    );
+
+    ctx.restore();
+
+    // Health bar above the head; the color shifts as health drops.
+    const percent = this.health / this.maxHealth;
+    drawBar(ctx, screen.x - 45, screen.y - 110, 90, 10, percent, healthColor(percent));
   }
 
   /**
@@ -105,7 +126,7 @@ export class Player {
     }
 
     this.health = Math.max(0, this.health - amount);
-    this.hitTimer = 1.0; // invincibility window in seconds
+    this.hitTimer = PLAYER_CONFIG.invincibilitySeconds;
     return true;
   }
 }

@@ -1,41 +1,23 @@
 // Enemies chase the player in a straight line. All the numbers that
-// make one enemy type different from another live in ENEMY_TYPES,
-// so adding a new type is just adding a new entry (plus a sprite).
+// make one enemy type different from another live in ENEMY_TYPES
+// (see GameConfig.js), so adding a new type is just adding a new
+// entry plus a sprite.
 
-import { getSprite, SPRITE_SIZE } from '../assets/ProceduralSprites.js';
+import { Entity } from './Entity.js';
+import { getSprite } from '../assets/ProceduralSprites.js';
 import { normalize } from '../core/MathUtils.js';
+import { drawCenteredSprite, drawBar } from '../core/DrawUtils.js';
+import { ENEMY_TYPES, ENEMY_CONFIG, SPRITE_SIZE } from '../config/GameConfig.js';
 
-export const ENEMY_TYPES = {
-  slime: {
-    sprite: 'slime',
-    moveSpeed: 110, // slow...
-    maxHealth: 30, // ...but takes a few hits
-    collisionRadius: 52,
-    contactDamage: 12, // HP the player loses on touch
-  },
-  bat: {
-    sprite: 'bat',
-    moveSpeed: 250, // fast...
-    maxHealth: 10, // ...but dies quickly
-    collisionRadius: 40,
-    contactDamage: 7,
-  },
-};
-
-// How quickly knockback fades (higher = snappier stop).
-const KNOCKBACK_FRICTION = 9;
-
-export class Enemy {
+export class Enemy extends Entity {
   constructor(x, y, typeName) {
     const type = ENEMY_TYPES[typeName];
+    super(x, y, type.collisionRadius);
 
     this.typeName = typeName;
-    this.x = x;
-    this.y = y;
     this.moveSpeed = type.moveSpeed;
     this.maxHealth = type.maxHealth;
     this.health = type.maxHealth;
-    this.collisionRadius = type.collisionRadius;
     this.contactDamage = type.contactDamage;
     this.sprite = getSprite(type.sprite);
     this.spriteSize = SPRITE_SIZE;
@@ -45,7 +27,6 @@ export class Enemy {
     this.knockbackY = 0;
 
     this.facing = 1;
-    this.dead = false;
 
     // Flashes white briefly when hit, so damage is easy to read.
     this.hitFlashTimer = 0;
@@ -54,16 +35,14 @@ export class Enemy {
     this.animationTimer = Math.random() * Math.PI * 2;
   }
 
-  update(deltaTime, player) {
-    const direction = normalize(player.x - this.x, player.y - this.y);
+  update(deltaTime, game) {
+    // Chase the player, plus whatever knockback is still in effect.
+    const direction = normalize(game.player.x - this.x, game.player.y - this.y);
+    this.velocityX = direction.x * this.moveSpeed + this.knockbackX;
+    this.velocityY = direction.y * this.moveSpeed + this.knockbackY;
+    super.update(deltaTime, game);
 
-    this.x += direction.x * this.moveSpeed * deltaTime;
-    this.y += direction.y * this.moveSpeed * deltaTime;
-
-    // Apply knockback on top of normal movement, then let it fade.
-    this.x += this.knockbackX * deltaTime;
-    this.y += this.knockbackY * deltaTime;
-    const fade = Math.max(0, 1 - KNOCKBACK_FRICTION * deltaTime);
+    const fade = Math.max(0, 1 - ENEMY_CONFIG.knockbackFriction * deltaTime);
     this.knockbackX *= fade;
     this.knockbackY *= fade;
 
@@ -75,10 +54,30 @@ export class Enemy {
     this.hitFlashTimer = Math.max(0, this.hitFlashTimer - deltaTime);
   }
 
+  render(ctx, camera) {
+    const screen = camera.worldToScreen(this.x, this.y);
+
+    // A gentle idle cycle makes the horde feel alive: bats bob up
+    // and down, everything else squishes.
+    const wobble = Math.sin(this.animationTimer * 6);
+    const isBat = this.typeName === 'bat';
+
+    drawCenteredSprite(ctx, this.sprite, screen.x, screen.y + (isBat ? wobble * 10 : 0), {
+      flipX: this.facing < 0,
+      scaleY: isBat ? 1 : 1 + wobble * 0.05,
+      brighten: this.hitFlashTimer > 0,
+    });
+
+    // Health bar, only once the enemy has actually been hurt.
+    if (this.health < this.maxHealth) {
+      drawBar(ctx, screen.x - 45, screen.y - 80, 90, 10, this.health / this.maxHealth, '#e04040');
+    }
+  }
+
   /** Take damage, flashing white and getting shoved along (dirX, dirY). */
-  takeDamage(amount, dirX = 0, dirY = 0, knockbackForce = 420) {
+  takeDamage(amount, dirX = 0, dirY = 0, knockbackForce = 0) {
     this.health -= amount;
-    this.hitFlashTimer = 0.1;
+    this.hitFlashTimer = ENEMY_CONFIG.hitFlashSeconds;
     this.knockbackX += dirX * knockbackForce;
     this.knockbackY += dirY * knockbackForce;
 

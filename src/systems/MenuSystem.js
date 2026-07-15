@@ -3,9 +3,10 @@
 // no smooth browser fonts anywhere.
 
 import { drawPixelText, measurePixelText } from '../assets/PixelFont.js';
-import { getSprite, SPRITE_SIZE } from '../assets/ProceduralSprites.js';
+import { getSprite } from '../assets/ProceduralSprites.js';
 import { randomRange, formatTime } from '../core/MathUtils.js';
-import { GAME_WIDTH, GAME_HEIGHT } from '../core/Constants.js';
+import { drawCenteredSprite } from '../core/DrawUtils.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
 // Palette for the menu artwork.
 const GOLD = '#ffd54f';
@@ -347,16 +348,13 @@ export class MenuSystem {
 
   renderCritters(ctx) {
     for (const critter of this.critters) {
-      const sprite = getSprite(critter.type);
-      const facing = critter.speed > 0 ? 1 : -1;
-      const bob = critter.type === 'bat' ? Math.sin(critter.phase * 6) * 12 : 0;
-      const squish = critter.type === 'slime' ? 1 + Math.sin(critter.phase * 6) * 0.05 : 1;
+      const isBat = critter.type === 'bat';
+      const bob = isBat ? Math.sin(critter.phase * 6) * 12 : 0;
 
-      ctx.save();
-      ctx.translate(critter.x, critter.y + bob);
-      ctx.scale(facing, squish);
-      ctx.drawImage(sprite, -SPRITE_SIZE / 2, -SPRITE_SIZE / 2);
-      ctx.restore();
+      drawCenteredSprite(ctx, getSprite(critter.type), critter.x, critter.y + bob, {
+        flipX: critter.speed < 0,
+        scaleY: isBat ? 1 : 1 + Math.sin(critter.phase * 6) * 0.05,
+      });
     }
   }
 }

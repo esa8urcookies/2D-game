@@ -10,15 +10,17 @@
 // will load it automatically, falling back to this procedural sheet
 // if the file is missing.
 
+import { SPRITE_SIZE } from '../config/GameConfig.js';
+
 export const HERO_SHEET_META = {
-  frameSize: 182,
+  frameSize: SPRITE_SIZE, // 182, matching every other sprite
   framesPerRow: 4,
   rows: { down: 0, left: 1, up: 2, right: 3 },
   walkFps: 8,
 };
 
 const UNIT = 26; // pixel-art grid size
-const SCALE = 7; // 26 * 7 = 182
+const SCALE = SPRITE_SIZE / UNIT; // 7: scales 26 up to exactly 182
 
 // Palette, loosely matching a tiny armored hero.
 const OUTLINE = '#23232e';

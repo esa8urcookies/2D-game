@@ -2,11 +2,15 @@
 // All entities use collision circles that are smaller than their
 // sprites, so the game feels fair.
 
-import { distance, normalize } from '../core/MathUtils.js';
+import { normalize } from '../core/MathUtils.js';
+import { WEAPON_CONFIG, ENEMY_CONFIG, EFFECTS_CONFIG } from '../config/GameConfig.js';
 
-/** True if two circles overlap. */
+/** True if two circles overlap (compares squared distances — no sqrt). */
 export function circlesOverlap(x1, y1, r1, x2, y2, r2) {
-  return distance(x1, y1, x2, y2) < r1 + r2;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const reach = r1 + r2;
+  return dx * dx + dy * dy < reach * reach;
 }
 
 export class CollisionSystem {
@@ -32,7 +36,7 @@ export class CollisionSystem {
         ) {
           // Knock the enemy back along the projectile's flight path.
           const push = normalize(projectile.velocityX, projectile.velocityY);
-          enemy.takeDamage(projectile.damage, push.x, push.y);
+          enemy.takeDamage(projectile.damage, push.x, push.y, WEAPON_CONFIG.knockbackForce);
 
           game.addDamageText(projectile.damage, enemy.x, enemy.y - 60);
           projectile.dead = true;
@@ -56,7 +60,8 @@ export class CollisionSystem {
         )
       ) {
         if (player.takeDamage(enemy.contactDamage)) {
-          game.camera.shake(7, 0.25);
+          const { intensity, duration } = EFFECTS_CONFIG.playerHitShake;
+          game.camera.shake(intensity, duration);
         }
       }
     }
@@ -72,9 +77,8 @@ export class CollisionSystem {
         const a = enemies[i];
         const b = enemies[j];
 
-        // They may overlap up to ~30% before being pushed apart —
-        // a loose crowd looks better than perfectly spaced circles.
-        const minGap = (a.collisionRadius + b.collisionRadius) * 0.7;
+        const minGap =
+          (a.collisionRadius + b.collisionRadius) * ENEMY_CONFIG.separationOverlap;
 
         // Compare squared distances first: with hundreds of enemies
         // this loop runs tens of thousands of times per frame, and

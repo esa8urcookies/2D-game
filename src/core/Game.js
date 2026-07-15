@@ -1,22 +1,23 @@
 // The Game class owns all game state and runs the main loop.
+//
+// States: 'menu' (title screen), 'playing', 'paused', 'gameover'.
+// Each frame: update entities and systems, then render everything.
 
 import { Input } from './Input.js';
 import { Camera } from './Camera.js';
 import { Player } from '../entities/Player.js';
+import { FloatingText } from '../entities/FloatingText.js';
 import { Renderer } from '../systems/Renderer.js';
 import { UISystem } from '../systems/UISystem.js';
 import { Spawner } from '../systems/Spawner.js';
 import { WeaponSystem } from '../systems/WeaponSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { MenuSystem } from '../systems/MenuSystem.js';
-import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
 // If the browser tab lags or is backgrounded, a single frame could
 // report a huge delta time. Capping it prevents physics jumps.
 const MAX_DELTA_TIME = 1 / 30;
-
-// Projectiles are removed once they are this far outside the screen.
-const PROJECTILE_CLEANUP_MARGIN = 200;
 
 export class Game {
   constructor(canvas) {
@@ -31,8 +32,6 @@ export class Game {
     this.menu = new MenuSystem();
     this.collisions = new CollisionSystem();
 
-    // 'menu' -> title screen, 'playing' -> gameplay, 'paused' ->
-    // gameplay frozen with the pause menu on top.
     this.state = 'menu';
 
     // startRun() fills these in; they exist here so the menu's
@@ -111,13 +110,7 @@ export class Game {
 
   /** Spawn a floating damage number in the world. */
   addDamageText(amount, x, y) {
-    this.damageTexts.push({
-      text: String(amount),
-      x,
-      y,
-      life: 0.7, // seconds until it disappears
-      maxLife: 0.7,
-    });
+    this.damageTexts.push(new FloatingText(amount, x, y));
   }
 
   update(deltaTime) {
@@ -131,7 +124,7 @@ export class Game {
         this.menu.selectedIndex = 0;
       }
     } else {
-      // Title screen or pause menu.
+      // Title screen, pause menu, or game-over screen.
       this.menu.update(deltaTime, this);
 
       // The title screen background drifts slowly, like an
@@ -148,28 +141,16 @@ export class Game {
   updateGameplay(deltaTime) {
     this.survivalTime += deltaTime;
 
-    this.player.update(deltaTime, this.input);
+    this.player.update(deltaTime, this);
     this.spawner.update(deltaTime, this);
 
-    for (const enemy of this.enemies) {
-      enemy.update(deltaTime, this.player);
-    }
-
+    for (const enemy of this.enemies) enemy.update(deltaTime, this);
     this.weapons.update(deltaTime, this);
-
-    for (const projectile of this.projectiles) {
-      projectile.update(deltaTime);
-    }
+    for (const projectile of this.projectiles) projectile.update(deltaTime, this);
+    for (const text of this.damageTexts) text.update(deltaTime, this);
 
     this.collisions.update(this);
     this.removeDeadEntities();
-
-    // Damage numbers drift up and fade out.
-    for (const text of this.damageTexts) {
-      text.y -= 90 * deltaTime;
-      text.life -= deltaTime;
-    }
-    this.damageTexts = this.damageTexts.filter((text) => text.life > 0);
 
     this.camera.follow(this.player);
 
@@ -185,20 +166,8 @@ export class Game {
     this.enemies = this.enemies.filter((enemy) => !enemy.dead);
     this.killCount += enemiesBefore - this.enemies.length;
 
-    // Projectiles disappear when spent or far off screen.
-    this.projectiles = this.projectiles.filter(
-      (projectile) => !projectile.dead && !this.isOffScreen(projectile)
-    );
-  }
-
-  isOffScreen(entity) {
-    const screen = this.camera.worldToScreen(entity.x, entity.y);
-    return (
-      screen.x < -PROJECTILE_CLEANUP_MARGIN ||
-      screen.x > GAME_WIDTH + PROJECTILE_CLEANUP_MARGIN ||
-      screen.y < -PROJECTILE_CLEANUP_MARGIN ||
-      screen.y > GAME_HEIGHT + PROJECTILE_CLEANUP_MARGIN
-    );
+    this.projectiles = this.projectiles.filter((projectile) => !projectile.dead);
+    this.damageTexts = this.damageTexts.filter((text) => !text.dead);
   }
 
   render() {
