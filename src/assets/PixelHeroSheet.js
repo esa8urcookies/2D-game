@@ -236,6 +236,7 @@ export function createHeroSheet() {
 // ---------------------------------------------------------------------------
 
 export const CUSTOM_SHEET = {
+  enabled: false, // set to true once your PNG exists at imagePath
   imagePath: 'src/assets/images/player-sheet.png',
   frameSize: 182,
   framesPerRow: 4,
@@ -244,6 +245,9 @@ export const CUSTOM_SHEET = {
 
 /** Try to load the custom sheet; resolves to null if unavailable. */
 export async function tryLoadCustomSheet() {
+  if (!CUSTOM_SHEET.enabled) {
+    return null;
+  }
   try {
     const response = await fetch(CUSTOM_SHEET.imagePath);
     if (!response.ok) return null;

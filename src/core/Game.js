@@ -40,6 +40,7 @@ export class Game {
     this.player = new Player(0, 0);
     this.enemies = [];
     this.projectiles = [];
+    this.damageTexts = [];
     this.spawner = new Spawner();
     this.weapons = new WeaponSystem();
     this.killCount = 0;
@@ -56,6 +57,7 @@ export class Game {
     this.player = new Player(0, 0);
     this.enemies = [];
     this.projectiles = [];
+    this.damageTexts = [];
     this.spawner = new Spawner();
     this.weapons = new WeaponSystem();
     this.killCount = 0;
@@ -107,7 +109,20 @@ export class Game {
     requestAnimationFrame((time) => this.loop(time));
   }
 
+  /** Spawn a floating damage number in the world. */
+  addDamageText(amount, x, y) {
+    this.damageTexts.push({
+      text: String(amount),
+      x,
+      y,
+      life: 0.7, // seconds until it disappears
+      maxLife: 0.7,
+    });
+  }
+
   update(deltaTime) {
+    this.camera.update(deltaTime);
+
     if (this.state === 'playing') {
       this.updateGameplay(deltaTime);
 
@@ -149,7 +164,19 @@ export class Game {
     this.collisions.update(this);
     this.removeDeadEntities();
 
+    // Damage numbers drift up and fade out.
+    for (const text of this.damageTexts) {
+      text.y -= 90 * deltaTime;
+      text.life -= deltaTime;
+    }
+    this.damageTexts = this.damageTexts.filter((text) => text.life > 0);
+
     this.camera.follow(this.player);
+
+    if (this.player.health <= 0) {
+      this.state = 'gameover';
+      this.menu.selectedIndex = 0;
+    }
   }
 
   removeDeadEntities() {
@@ -185,7 +212,7 @@ export class Game {
     this.renderer.render(this);
     this.ui.render(this);
 
-    if (this.state === 'paused') {
+    if (this.state === 'paused' || this.state === 'gameover') {
       this.menu.render(this);
     }
   }

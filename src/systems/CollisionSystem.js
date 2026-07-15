@@ -2,7 +2,7 @@
 // All entities use collision circles that are smaller than their
 // sprites, so the game feels fair.
 
-import { distance } from '../core/MathUtils.js';
+import { distance, normalize } from '../core/MathUtils.js';
 
 /** True if two circles overlap. */
 export function circlesOverlap(x1, y1, r1, x2, y2, r2) {
@@ -30,7 +30,11 @@ export class CollisionSystem {
             enemy.x, enemy.y, enemy.collisionRadius
           )
         ) {
-          enemy.takeDamage(projectile.damage);
+          // Knock the enemy back along the projectile's flight path.
+          const push = normalize(projectile.velocityX, projectile.velocityY);
+          enemy.takeDamage(projectile.damage, push.x, push.y);
+
+          game.addDamageText(projectile.damage, enemy.x, enemy.y - 60);
           projectile.dead = true;
           break; // this projectile is spent
         }
@@ -38,7 +42,7 @@ export class CollisionSystem {
     }
   }
 
-  /** Touching an enemy triggers the player's contact feedback. */
+  /** Touching an enemy damages the player (unless invincible). */
   enemiesVsPlayer(game) {
     const player = game.player;
 
@@ -51,7 +55,9 @@ export class CollisionSystem {
           enemy.x, enemy.y, enemy.collisionRadius
         )
       ) {
-        player.onEnemyContact();
+        if (player.takeDamage(enemy.contactDamage)) {
+          game.camera.shake(7, 0.25);
+        }
       }
     }
   }
@@ -69,12 +75,19 @@ export class CollisionSystem {
         // They may overlap up to ~30% before being pushed apart —
         // a loose crowd looks better than perfectly spaced circles.
         const minGap = (a.collisionRadius + b.collisionRadius) * 0.7;
-        const d = distance(a.x, a.y, b.x, b.y);
 
-        if (d > 0 && d < minGap) {
+        // Compare squared distances first: with hundreds of enemies
+        // this loop runs tens of thousands of times per frame, and
+        // skipping the square root for far-apart pairs keeps it fast.
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const distanceSquared = dx * dx + dy * dy;
+
+        if (distanceSquared > 0 && distanceSquared < minGap * minGap) {
+          const d = Math.sqrt(distanceSquared);
           const push = (minGap - d) / 2;
-          const nx = (b.x - a.x) / d;
-          const ny = (b.y - a.y) / d;
+          const nx = dx / d;
+          const ny = dy / d;
 
           a.x -= nx * push;
           a.y -= ny * push;

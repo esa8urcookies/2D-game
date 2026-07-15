@@ -4,7 +4,7 @@
 
 import { drawPixelText, measurePixelText } from '../assets/PixelFont.js';
 import { getSprite, SPRITE_SIZE } from '../assets/ProceduralSprites.js';
-import { randomRange } from '../core/MathUtils.js';
+import { randomRange, formatTime } from '../core/MathUtils.js';
 import { GAME_WIDTH, GAME_HEIGHT } from '../core/Constants.js';
 
 // Palette for the menu artwork.
@@ -39,6 +39,18 @@ export class MenuSystem {
       return [
         { label: 'RESUME', action: () => (game.state = 'playing') },
         { label: 'RESTART', action: () => game.startRun() },
+      ];
+    }
+    if (game.state === 'gameover') {
+      return [
+        { label: 'RESTART', action: () => game.startRun() },
+        {
+          label: 'MAIN MENU',
+          action: () => {
+            game.state = 'menu';
+            this.screen = 'title';
+          },
+        },
       ];
     }
     if (this.screen === 'howto') {
@@ -92,6 +104,11 @@ export class MenuSystem {
       }
     }
 
+    // Quick restart from the game-over screen.
+    if (game.state === 'gameover' && input.wasPressed('KeyR')) {
+      game.startRun();
+    }
+
     if (this.selectedIndex >= buttons.length) {
       this.selectedIndex = 0;
     }
@@ -130,6 +147,11 @@ export class MenuSystem {
 
     if (game.state === 'paused') {
       this.renderPauseOverlay(ctx, game);
+      return;
+    }
+
+    if (game.state === 'gameover') {
+      this.renderGameOver(ctx, game);
       return;
     }
 
@@ -234,6 +256,45 @@ export class MenuSystem {
       color: TEXT_DIM,
       align: 'center',
     });
+  }
+
+  renderGameOver(ctx, game) {
+    // Dark red-tinted overlay above the frozen battlefield.
+    ctx.fillStyle = 'rgba(24, 8, 12, 0.82)';
+    ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    drawPixelText(ctx, 'GAME OVER', GAME_WIDTH / 2, 160, {
+      scale: 16,
+      color: '#e04040',
+      shadeColor: '#7e2020',
+      outline: OUTLINE,
+      align: 'center',
+    });
+
+    const stats = [
+      `TIME ${formatTime(game.survivalTime)}`,
+      `KILLS ${game.killCount}`,
+      `LEVEL ${game.player.level}`,
+    ];
+    stats.forEach((line, i) => {
+      drawPixelText(ctx, line, GAME_WIDTH / 2, 380 + i * 80, {
+        scale: 6,
+        color: '#e8ecf4',
+        shadeColor: '#9aa3b8',
+        outline: OUTLINE,
+        align: 'center',
+      });
+    });
+
+    this.renderButtons(ctx, game, 680);
+
+    if (Math.floor(this.time * 1.4) % 2 === 0) {
+      drawPixelText(ctx, 'PRESS R TO RESTART', GAME_WIDTH / 2, 980, {
+        scale: 4,
+        color: TEXT_DIM,
+        align: 'center',
+      });
+    }
   }
 
   /** Draw the current button list, stacked and centered. */

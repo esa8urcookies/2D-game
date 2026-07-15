@@ -21,6 +21,13 @@ export class Player {
 
     this.moveSpeed = 420; // pixels per second
 
+    this.maxHealth = 100;
+    this.health = 100;
+
+    // Character level. Leveling up arrives with the XP system; it
+    // already exists so the game-over screen can show it.
+    this.level = 1;
+
     // The collision circle is much smaller than the 182x182 sprite
     // so near-misses feel fair instead of frustrating.
     this.collisionRadius = 45;
@@ -42,9 +49,8 @@ export class Player {
       }
     });
 
-    // Counts down after an enemy touches us. While above zero the
-    // player blinks and cannot be "hit" again (no health yet, but
-    // this keeps contact feedback from flickering every frame).
+    // Invincibility window: counts down after taking a hit. While
+    // above zero the player blinks and cannot be damaged again.
     this.hitTimer = 0;
   }
 
@@ -89,10 +95,17 @@ export class Player {
     };
   }
 
-  /** Called by the CollisionSystem when an enemy touches the player. */
-  onEnemyContact() {
-    if (this.hitTimer <= 0) {
-      this.hitTimer = 0.8; // brief grace period between hits
+  /**
+   * Called by the CollisionSystem when an enemy touches the player.
+   * Returns true if the hit landed (false while invincible).
+   */
+  takeDamage(amount) {
+    if (this.hitTimer > 0) {
+      return false;
     }
+
+    this.health = Math.max(0, this.health - amount);
+    this.hitTimer = 1.0; // invincibility window in seconds
+    return true;
   }
 }

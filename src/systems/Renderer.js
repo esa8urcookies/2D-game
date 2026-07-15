@@ -3,6 +3,7 @@
 // the canvas element itself is scaled to fit the window with CSS.
 
 import { GAME_WIDTH, GAME_HEIGHT } from '../core/Constants.js';
+import { drawPixelText } from '../assets/PixelFont.js';
 
 // The background is an endless grid so the player can see that
 // they are moving even though the camera follows them.
@@ -21,6 +22,25 @@ export class Renderer {
     this.drawEnemies(game.enemies, game.camera);
     this.drawPlayer(game.player, game.camera);
     this.drawProjectiles(game.projectiles, game.camera);
+    this.drawDamageTexts(game.damageTexts, game.camera);
+  }
+
+  /**
+   * A small bar centered above an entity. Only a thin outline plus
+   * two rects, so it stays cheap even with hundreds on screen.
+   */
+  drawHealthBar(screenX, screenY, healthPercent, fillColor) {
+    const ctx = this.ctx;
+    const width = 90;
+    const height = 10;
+    const x = screenX - width / 2;
+
+    ctx.fillStyle = 'rgba(10, 10, 16, 0.8)';
+    ctx.fillRect(x - 2, screenY - 2, width + 4, height + 4);
+    ctx.fillStyle = '#2a2d38';
+    ctx.fillRect(x, screenY, width, height);
+    ctx.fillStyle = fillColor;
+    ctx.fillRect(x, screenY, width * Math.max(0, healthPercent), height);
   }
 
   /** Skip drawing anything that is comfortably off screen. */
@@ -91,6 +111,16 @@ export class Renderer {
 
       ctx.drawImage(enemy.sprite, -half, -half);
       ctx.restore();
+
+      // Health bar, only once the enemy has actually been hurt.
+      if (enemy.health < enemy.maxHealth) {
+        this.drawHealthBar(
+          screen.x,
+          screen.y - 80,
+          enemy.health / enemy.maxHealth,
+          '#e04040'
+        );
+      }
     }
   }
 
@@ -116,6 +146,12 @@ export class Renderer {
     );
 
     ctx.restore();
+
+    // The player's own bar floats above their head; the color shifts
+    // as health drops.
+    const percent = player.health / player.maxHealth;
+    const color = percent > 0.5 ? '#5cd65c' : percent > 0.25 ? '#ffd54f' : '#e04040';
+    this.drawHealthBar(screen.x, screen.y - 110, percent, color);
   }
 
   drawProjectiles(projectiles, camera) {
@@ -136,6 +172,26 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(screen.x, screen.y, projectile.collisionRadius, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  /** Floating damage numbers that rise and fade out. */
+  drawDamageTexts(damageTexts, camera) {
+    const ctx = this.ctx;
+
+    for (const text of damageTexts) {
+      const screen = camera.worldToScreen(text.x, text.y);
+      if (!this.isVisible(screen)) continue;
+
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, text.life / (text.maxLife * 0.5));
+      drawPixelText(ctx, text.text, screen.x, screen.y, {
+        scale: 4,
+        color: '#ffd54f',
+        outline: '#16161f',
+        align: 'center',
+      });
+      ctx.restore();
     }
   }
 }

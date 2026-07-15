@@ -33,3 +33,10 @@ export function normalize(x, y) {
 export function randomRange(min, max) {
   return min + Math.random() * (max - min);
 }
+
+/** Format seconds as M:SS, e.g. for the survival timer. */
+export function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}

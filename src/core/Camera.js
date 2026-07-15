@@ -1,6 +1,6 @@
 // The camera decides which part of the world is visible on screen.
-// It follows a target (the player) and converts world coordinates
-// into screen coordinates for rendering.
+// It follows a target (the player), converts world coordinates into
+// screen coordinates, and can shake briefly for impact feedback.
 
 import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
 
@@ -8,12 +8,41 @@ export class Camera {
   constructor() {
     this.x = 0;
     this.y = 0;
+
+    this.shakeTime = 0;
+    this.shakeDuration = 0;
+    this.shakeIntensity = 0;
+    this.shakeOffsetX = 0;
+    this.shakeOffsetY = 0;
+  }
+
+  /** Kick off a small shake, e.g. when the player is hit. */
+  shake(intensity = 8, duration = 0.25) {
+    this.shakeIntensity = intensity;
+    this.shakeDuration = duration;
+    this.shakeTime = duration;
+  }
+
+  /** Advance the shake; call once per frame. */
+  update(deltaTime) {
+    this.shakeTime = Math.max(0, this.shakeTime - deltaTime);
+
+    if (this.shakeTime > 0) {
+      // Random jitter that gets weaker as the shake runs out.
+      const falloff = this.shakeTime / this.shakeDuration;
+      const strength = this.shakeIntensity * falloff;
+      this.shakeOffsetX = (Math.random() * 2 - 1) * strength;
+      this.shakeOffsetY = (Math.random() * 2 - 1) * strength;
+    } else {
+      this.shakeOffsetX = 0;
+      this.shakeOffsetY = 0;
+    }
   }
 
   /** Center the camera on a target (usually the player). */
   follow(target) {
-    this.x = target.x - GAME_WIDTH / 2;
-    this.y = target.y - GAME_HEIGHT / 2;
+    this.x = target.x - GAME_WIDTH / 2 + this.shakeOffsetX;
+    this.y = target.y - GAME_HEIGHT / 2 + this.shakeOffsetY;
   }
 
   /** Convert a world position to a screen position. */
