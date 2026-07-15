@@ -1,7 +1,7 @@
 // The player character. Movement is the only input in this game;
-// weapons will fire automatically in a later step.
+// the WeaponSystem fires automatically at nearby enemies.
 
-import { createPlayerSprite, SPRITE_SIZE } from '../assets/ProceduralSprites.js';
+import { getSprite, SPRITE_SIZE } from '../assets/ProceduralSprites.js';
 
 export class Player {
   constructor(x, y) {
@@ -15,11 +15,16 @@ export class Player {
     // so near-misses feel fair instead of frustrating.
     this.collisionRadius = 45;
 
-    this.sprite = createPlayerSprite();
+    this.sprite = getSprite('player');
     this.spriteSize = SPRITE_SIZE;
 
-    // Remember which way we last moved, for flipping the sprite later.
+    // Remember which way we last moved, for flipping the sprite.
     this.facing = 1; // 1 = right, -1 = left
+
+    // Counts down after an enemy touches us. While above zero the
+    // player blinks and cannot be "hit" again (no health yet, but
+    // this keeps contact feedback from flickering every frame).
+    this.hitTimer = 0;
   }
 
   update(deltaTime, input) {
@@ -30,6 +35,15 @@ export class Player {
 
     if (direction.x !== 0) {
       this.facing = direction.x > 0 ? 1 : -1;
+    }
+
+    this.hitTimer = Math.max(0, this.hitTimer - deltaTime);
+  }
+
+  /** Called by the CollisionSystem when an enemy touches the player. */
+  onEnemyContact() {
+    if (this.hitTimer <= 0) {
+      this.hitTimer = 0.8; // brief grace period between hits
     }
   }
 }

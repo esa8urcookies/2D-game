@@ -2,7 +2,7 @@
 // It follows a target (the player) and converts world coordinates
 // into screen coordinates for rendering.
 
-import { GAME_WIDTH, GAME_HEIGHT } from './Game.js';
+import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
 
 export class Camera {
   constructor() {

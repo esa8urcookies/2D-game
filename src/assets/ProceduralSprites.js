@@ -5,6 +5,17 @@
 
 export const SPRITE_SIZE = 182;
 
+// Each sprite is only built once, then shared by every entity that
+// uses it. Drawing 200 slimes still means only one slime canvas.
+const spriteCache = new Map();
+
+export function getSprite(name) {
+  if (!spriteCache.has(name)) {
+    spriteCache.set(name, SPRITE_BUILDERS[name]());
+  }
+  return spriteCache.get(name);
+}
+
 /** Create an offscreen canvas to draw a sprite on. */
 function createSpriteCanvas() {
   const canvas = document.createElement('canvas');
@@ -52,6 +63,125 @@ export function createPlayerSprite() {
 
   return canvas;
 }
+
+/**
+ * Slime: a squishy green dome with big eyes.
+ * Slow but sturdy — the basic crowd enemy.
+ */
+export function createSlimeSprite() {
+  const canvas = createSpriteCanvas();
+  const ctx = canvas.getContext('2d');
+  const center = SPRITE_SIZE / 2;
+
+  // Shadow.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(center, 156, 58, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body: a dome sitting on the ground.
+  ctx.fillStyle = '#66bb6a';
+  ctx.strokeStyle = '#2e7d32';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(center - 62, 150);
+  ctx.quadraticCurveTo(center - 70, 60, center, 52);
+  ctx.quadraticCurveTo(center + 70, 60, center + 62, 150);
+  ctx.quadraticCurveTo(center, 162, center - 62, 150);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Glossy highlight.
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(center - 24, 82, 16, 10, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyes.
+  ctx.fillStyle = '#1b3a1d';
+  ctx.beginPath();
+  ctx.arc(center - 20, 108, 9, 0, Math.PI * 2);
+  ctx.arc(center + 20, 108, 9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Mouth.
+  ctx.strokeStyle = '#1b3a1d';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.arc(center, 122, 14, 0.3, Math.PI - 0.3);
+  ctx.stroke();
+
+  return canvas;
+}
+
+/**
+ * Bat: a small dark flyer with pointed wings.
+ * Fast but fragile.
+ */
+export function createBatSprite() {
+  const canvas = createSpriteCanvas();
+  const ctx = canvas.getContext('2d');
+  const center = SPRITE_SIZE / 2;
+
+  ctx.fillStyle = '#7e57c2';
+  ctx.strokeStyle = '#4527a0';
+  ctx.lineWidth = 6;
+
+  // Left wing.
+  ctx.beginPath();
+  ctx.moveTo(center - 18, 90);
+  ctx.quadraticCurveTo(center - 70, 50, center - 84, 92);
+  ctx.quadraticCurveTo(center - 62, 88, center - 54, 104);
+  ctx.quadraticCurveTo(center - 40, 96, center - 18, 108);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Right wing (mirror of the left).
+  ctx.beginPath();
+  ctx.moveTo(center + 18, 90);
+  ctx.quadraticCurveTo(center + 70, 50, center + 84, 92);
+  ctx.quadraticCurveTo(center + 62, 88, center + 54, 104);
+  ctx.quadraticCurveTo(center + 40, 96, center + 18, 108);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Body.
+  ctx.fillStyle = '#5e35b1';
+  ctx.beginPath();
+  ctx.arc(center, 96, 26, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Ears.
+  ctx.fillStyle = '#5e35b1';
+  ctx.beginPath();
+  ctx.moveTo(center - 18, 78);
+  ctx.lineTo(center - 12, 58);
+  ctx.lineTo(center - 4, 76);
+  ctx.moveTo(center + 18, 78);
+  ctx.lineTo(center + 12, 58);
+  ctx.lineTo(center + 4, 76);
+  ctx.fill();
+
+  // Eyes.
+  ctx.fillStyle = '#ffeb3b';
+  ctx.beginPath();
+  ctx.arc(center - 9, 92, 5, 0, Math.PI * 2);
+  ctx.arc(center + 9, 92, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  return canvas;
+}
+
+// Registered builders for the sprite cache above.
+const SPRITE_BUILDERS = {
+  player: createPlayerSprite,
+  slime: createSlimeSprite,
+  bat: createBatSprite,
+};
 
 /** Helper: rounded rectangle path. */
 function roundedRect(ctx, x, y, width, height, radius) {

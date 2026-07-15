@@ -42,17 +42,18 @@ index.html                       Canvas element + module entry
 styles.css                       Fullscreen layout and canvas centering
 src/main.js                      Entry point
 src/core/Game.js                 Game state + main loop (delta time)
+src/core/Constants.js            Internal resolution constants
 src/core/Input.js                Keyboard input (WASD / arrows)
 src/core/Camera.js               Follows the player
 src/core/MathUtils.js            Vector/math helpers
-src/entities/Player.js           Player movement + stats
-src/entities/Enemy.js            (next step)
-src/entities/Projectile.js       (next step)
+src/entities/Player.js           Player movement + contact feedback
+src/entities/Enemy.js            Enemy types (slime, bat) + chasing
+src/entities/Projectile.js       Auto-attack projectiles
 src/entities/XPGem.js            (later step)
 src/systems/Renderer.js          Draws background + entities
-src/systems/Spawner.js           (next step)
-src/systems/CollisionSystem.js   Circle collision helpers
-src/systems/WeaponSystem.js      (next step)
-src/systems/UISystem.js          Title, FPS, debug HUD
+src/systems/Spawner.js           Off-screen ring spawning + ramp-up
+src/systems/CollisionSystem.js   Projectile/enemy/player collisions
+src/systems/WeaponSystem.js      Auto-fires at the nearest enemy
+src/systems/UISystem.js          Title, timer, kills, FPS HUD
 src/assets/ProceduralSprites.js  182x182 placeholder sprites
 ```
