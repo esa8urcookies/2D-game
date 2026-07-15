@@ -1,7 +1,9 @@
-// UI system: draws HUD text on top of the game world.
+// UI system: draws the in-game HUD on top of the game world, using
+// the same pixel font as the menu so everything matches.
 // Everything is positioned in the internal 1920x1080 space.
 
-import { GAME_WIDTH, GAME_HEIGHT } from '../core/Constants.js';
+import { GAME_WIDTH } from '../core/Constants.js';
+import { drawPixelText } from '../assets/PixelFont.js';
 
 /** Format seconds as M:SS for the survival timer. */
 function formatTime(totalSeconds) {
@@ -35,43 +37,31 @@ export class UISystem {
   render(game) {
     const ctx = this.ctx;
 
-    ctx.save();
-    ctx.textBaseline = 'top';
-
-    // Title, top center.
-    ctx.font = 'bold 48px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.fillText('SWARM SURVIVORS', GAME_WIDTH / 2, 24);
-
-    // Survival timer, under the title.
-    ctx.font = 'bold 40px monospace';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-    ctx.fillText(formatTime(game.survivalTime), GAME_WIDTH / 2, 84);
+    // Survival timer, top center.
+    drawPixelText(ctx, formatTime(game.survivalTime), GAME_WIDTH / 2, 28, {
+      scale: 7,
+      color: '#e8ecf4',
+      shadeColor: '#9aa3b8',
+      outline: '#16161f',
+      align: 'center',
+    });
 
     // Kill counter, top right.
-    ctx.font = 'bold 36px system-ui, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillStyle = 'rgba(255, 213, 79, 0.9)';
-    ctx.fillText(`Kills: ${game.killCount}`, GAME_WIDTH - 24, 24);
+    drawPixelText(ctx, `KILLS ${game.killCount}`, GAME_WIDTH - 340, 36, {
+      scale: 5,
+      color: '#ffd54f',
+      shadeColor: '#c8891a',
+      outline: '#16161f',
+    });
 
-    // Debug info, top left.
-    ctx.font = '28px monospace';
+    // Debug info, top left (small, quiet).
+    ctx.save();
+    ctx.textBaseline = 'top';
+    ctx.font = '24px monospace';
     ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.fillText(`FPS: ${this.fps}`, 24, 24);
-    ctx.fillText(
-      `Player: ${Math.round(game.player.x)}, ${Math.round(game.player.y)}`,
-      24,
-      60
-    );
-    ctx.fillText(`Enemies: ${game.enemies.length}`, 24, 96);
-
-    // Controls hint, bottom left.
-    ctx.font = '24px system-ui, sans-serif';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.fillText('Move: WASD / Arrow Keys', 24, GAME_HEIGHT - 48);
-
+    ctx.fillText(`FPS: ${this.fps}`, 24, 24);
+    ctx.fillText(`Enemies: ${game.enemies.length}`, 24, 54);
     ctx.restore();
   }
 }

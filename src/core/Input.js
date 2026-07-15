@@ -1,18 +1,28 @@
-// Keyboard input handling.
-// Tracks which keys are held down and converts WASD / arrow keys
-// into a movement direction the rest of the game can use.
+// Keyboard and mouse input handling.
+// Tracks held keys, keys pressed this frame, and the mouse position
+// in internal game coordinates (the canvas is scaled by CSS, so the
+// mouse position must be converted back to 1920x1080 space).
 
 import { normalize } from './MathUtils.js';
+import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
 
 export class Input {
   constructor() {
     this.keys = new Set();
+    this.pressedThisFrame = new Set();
+
+    this.mouseX = 0;
+    this.mouseY = 0;
+    this.clickedThisFrame = false;
 
     window.addEventListener('keydown', (event) => {
+      if (!event.repeat) {
+        this.pressedThisFrame.add(event.code);
+      }
       this.keys.add(event.code);
 
-      // Stop arrow keys from scrolling the page.
-      if (event.code.startsWith('Arrow')) {
+      // Stop arrow keys and space from scrolling the page.
+      if (event.code.startsWith('Arrow') || event.code === 'Space') {
         event.preventDefault();
       }
     });
@@ -28,8 +38,34 @@ export class Input {
     });
   }
 
+  /** Start listening to the mouse, mapped into game coordinates. */
+  attachMouse(canvas) {
+    const toGameCoords = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      this.mouseX = ((event.clientX - rect.left) / rect.width) * GAME_WIDTH;
+      this.mouseY = ((event.clientY - rect.top) / rect.height) * GAME_HEIGHT;
+    };
+
+    canvas.addEventListener('mousemove', toGameCoords);
+    canvas.addEventListener('mousedown', (event) => {
+      toGameCoords(event);
+      this.clickedThisFrame = true;
+    });
+  }
+
   isDown(code) {
     return this.keys.has(code);
+  }
+
+  /** True only on the frame the key first went down. */
+  wasPressed(code) {
+    return this.pressedThisFrame.has(code);
+  }
+
+  /** Called by the game at the end of every frame. */
+  endFrame() {
+    this.pressedThisFrame.clear();
+    this.clickedThisFrame = false;
   }
 
   /**

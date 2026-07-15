@@ -8,6 +8,7 @@ import { UISystem } from '../systems/UISystem.js';
 import { Spawner } from '../systems/Spawner.js';
 import { WeaponSystem } from '../systems/WeaponSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
+import { MenuSystem } from '../systems/MenuSystem.js';
 import { GAME_WIDTH, GAME_HEIGHT } from './Constants.js';
 
 // If the browser tab lags or is backgrounded, a single frame could
@@ -23,20 +24,24 @@ export class Game {
     this.ctx = canvas.getContext('2d');
 
     this.input = new Input();
+    this.input.attachMouse(canvas);
     this.camera = new Camera();
     this.renderer = new Renderer(this.ctx);
     this.ui = new UISystem(this.ctx);
-    this.spawner = new Spawner();
-    this.weapons = new WeaponSystem();
+    this.menu = new MenuSystem();
     this.collisions = new CollisionSystem();
 
-    // The player starts at the world origin, which the camera
-    // centers on screen.
+    // 'menu' -> title screen, 'playing' -> gameplay, 'paused' ->
+    // gameplay frozen with the pause menu on top.
+    this.state = 'menu';
+
+    // startRun() fills these in; they exist here so the menu's
+    // drifting background has a world to point the camera at.
     this.player = new Player(0, 0);
     this.enemies = [];
     this.projectiles = [];
-
-    // Run stats shown in the HUD.
+    this.spawner = new Spawner();
+    this.weapons = new WeaponSystem();
     this.killCount = 0;
     this.survivalTime = 0;
 
@@ -44,6 +49,21 @@ export class Game {
 
     this.handleResize();
     window.addEventListener('resize', () => this.handleResize());
+  }
+
+  /** Reset everything and start a fresh run. */
+  startRun() {
+    this.player = new Player(0, 0);
+    this.enemies = [];
+    this.projectiles = [];
+    this.spawner = new Spawner();
+    this.weapons = new WeaponSystem();
+    this.killCount = 0;
+    this.survivalTime = 0;
+    this.camera.follow(this.player);
+    this.menu.screen = 'title';
+    this.menu.selectedIndex = 0;
+    this.state = 'playing';
   }
 
   /**
@@ -88,6 +108,29 @@ export class Game {
   }
 
   update(deltaTime) {
+    if (this.state === 'playing') {
+      this.updateGameplay(deltaTime);
+
+      if (this.input.wasPressed('Escape')) {
+        this.state = 'paused';
+        this.menu.selectedIndex = 0;
+      }
+    } else {
+      // Title screen or pause menu.
+      this.menu.update(deltaTime, this);
+
+      // The title screen background drifts slowly, like an
+      // attract mode.
+      if (this.state === 'menu') {
+        this.camera.x += 40 * deltaTime;
+      }
+    }
+
+    this.ui.update(deltaTime);
+    this.input.endFrame();
+  }
+
+  updateGameplay(deltaTime) {
     this.survivalTime += deltaTime;
 
     this.player.update(deltaTime, this.input);
@@ -107,7 +150,6 @@ export class Game {
     this.removeDeadEntities();
 
     this.camera.follow(this.player);
-    this.ui.update(deltaTime);
   }
 
   removeDeadEntities() {
@@ -133,7 +175,18 @@ export class Game {
   }
 
   render() {
+    if (this.state === 'menu') {
+      // Just the drifting background behind the menu artwork.
+      this.renderer.drawBackground(this.camera);
+      this.menu.render(this);
+      return;
+    }
+
     this.renderer.render(this);
     this.ui.render(this);
+
+    if (this.state === 'paused') {
+      this.menu.render(this);
+    }
   }
 }
