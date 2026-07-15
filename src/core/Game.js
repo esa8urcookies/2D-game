@@ -172,8 +172,11 @@ export class Game {
 
   render() {
     if (this.state === 'menu') {
-      // Just the drifting background behind the menu artwork.
+      // The drifting grass behind the menu, dimmed a little so the
+      // menu artwork stays easy to read.
       this.renderer.drawBackground(this.camera);
+      this.ctx.fillStyle = 'rgba(12, 14, 20, 0.45)';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.menu.render(this);
       return;
     }
