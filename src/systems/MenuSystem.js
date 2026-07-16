@@ -7,6 +7,8 @@ import { getSprite } from '../assets/ProceduralSprites.js';
 import { randomRange, formatTime } from '../core/MathUtils.js';
 import { drawCenteredSprite } from '../core/DrawUtils.js';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
+import { SHOP_UPGRADES, upgradeCost } from '../config/ShopUpgrades.js';
+import { persistSave, resetSave } from '../core/SaveData.js';
 
 // Palette for the menu artwork.
 const GOLD = '#ffd54f';
@@ -46,6 +48,14 @@ export class MenuSystem {
       return [
         { label: 'RESTART', action: () => game.startRun() },
         {
+          label: 'UPGRADE SHOP',
+          action: () => {
+            game.state = 'menu';
+            this.screen = 'shop';
+            this.selectedIndex = 0;
+          },
+        },
+        {
           label: 'MAIN MENU',
           action: () => {
             game.state = 'menu';
@@ -59,6 +69,7 @@ export class MenuSystem {
     }
     return [
       { label: 'START GAME', action: () => game.startRun() },
+      { label: 'UPGRADE SHOP', action: () => { this.screen = 'shop'; this.selectedIndex = 0; } },
       { label: 'HOW TO PLAY', action: () => (this.screen = 'howto') },
     ];
   }
@@ -66,6 +77,13 @@ export class MenuSystem {
   update(deltaTime, game) {
     this.time += deltaTime;
     const input = game.input;
+
+    // The shop has its own row-based input handling.
+    if (this.screen === 'shop' && game.state === 'menu') {
+      this.updateShop(input, game);
+      return;
+    }
+
     const buttons = this.getButtons(game);
 
     // Keyboard navigation.
@@ -143,6 +161,67 @@ export class MenuSystem {
     );
   }
 
+  // --- Shop input + purchase logic ---------------------------------------
+
+  /** Shop rows are the upgrades, then BACK and RESET SAVE. */
+  updateShop(input, game) {
+    const rowCount = SHOP_UPGRADES.length + 2;
+    const backIndex = SHOP_UPGRADES.length;
+    const resetIndex = SHOP_UPGRADES.length + 1;
+
+    if (input.wasPressed('ArrowDown') || input.wasPressed('KeyS')) {
+      this.selectedIndex = (this.selectedIndex + 1) % rowCount;
+    }
+    if (input.wasPressed('ArrowUp') || input.wasPressed('KeyW')) {
+      this.selectedIndex = (this.selectedIndex + rowCount - 1) % rowCount;
+    }
+
+    // Mouse hover + click on any row.
+    let hovering = false;
+    this.buttonRects.forEach((rect, index) => {
+      const over =
+        input.mouseX >= rect.x && input.mouseX <= rect.x + rect.w &&
+        input.mouseY >= rect.y && input.mouseY <= rect.y + rect.h;
+      if (over) {
+        hovering = true;
+        this.selectedIndex = index;
+      }
+    });
+    game.canvas.style.cursor = hovering ? 'pointer' : 'default';
+
+    const activate =
+      input.wasPressed('Enter') || input.wasPressed('Space') ||
+      (hovering && input.clickedThisFrame);
+
+    if (activate) {
+      if (this.selectedIndex === backIndex) {
+        this.screen = 'title';
+        this.selectedIndex = 0;
+      } else if (this.selectedIndex === resetIndex) {
+        game.save = resetSave();
+      } else {
+        this.buyShopUpgrade(game, SHOP_UPGRADES[this.selectedIndex]);
+      }
+    }
+
+    if (input.wasPressed('Escape')) {
+      this.screen = 'title';
+      this.selectedIndex = 0;
+    }
+  }
+
+  buyShopUpgrade(game, def) {
+    const level = game.save.shop[def.id] || 0;
+    if (level >= def.maxLevel) return;
+
+    const cost = upgradeCost(def, level);
+    if (game.save.totalCoins < cost) return;
+
+    game.save.totalCoins -= cost;
+    game.save.shop[def.id] = level + 1;
+    persistSave(game.save);
+  }
+
   render(game) {
     const ctx = game.ctx;
 
@@ -160,9 +239,116 @@ export class MenuSystem {
 
     if (this.screen === 'howto') {
       this.renderHowTo(ctx, game);
+    } else if (this.screen === 'shop') {
+      this.renderShop(ctx, game);
     } else {
       this.renderTitle(ctx, game);
     }
+  }
+
+  // --- Shop rendering ------------------------------------------------------
+
+  renderShop(ctx, game) {
+    const panelW = 1400;
+    const panelH = 800;
+    const panelX = (GAME_WIDTH - panelW) / 2;
+    const panelY = 100;
+
+    // Panel with the same double border as the how-to screen.
+    ctx.fillStyle = OUTLINE;
+    ctx.fillRect(panelX - U * 2, panelY - U * 2, panelW + U * 4, panelH + U * 4);
+    ctx.fillStyle = GOLD_DARK;
+    ctx.fillRect(panelX - U, panelY - U, panelW + U * 2, panelH + U * 2);
+    ctx.fillStyle = '#1b1d28';
+    ctx.fillRect(panelX, panelY, panelW, panelH);
+
+    drawPixelText(ctx, 'UPGRADE SHOP', GAME_WIDTH / 2, panelY + 34, {
+      scale: 8,
+      color: GOLD,
+      shadeColor: GOLD_DARK,
+      outline: OUTLINE,
+      align: 'center',
+    });
+    const coinLabel = `COINS ${game.save.totalCoins}`;
+    drawPixelText(
+      ctx, coinLabel,
+      panelX + panelW - 40 - measurePixelText(coinLabel, 4), panelY + 44,
+      { scale: 4, color: GOLD, outline: OUTLINE }
+    );
+
+    this.buttonRects = [];
+
+    // One row per permanent upgrade.
+    SHOP_UPGRADES.forEach((def, index) => {
+      const rowY = panelY + 140 + index * 82;
+      const rowRect = { x: panelX + 30, y: rowY - 12, w: panelW - 60, h: 74 };
+      this.buttonRects.push(rowRect);
+
+      if (index === this.selectedIndex) {
+        ctx.fillStyle = GOLD;
+        ctx.fillRect(rowRect.x - U, rowRect.y - U, rowRect.w + U * 2, rowRect.h + U * 2);
+        ctx.fillStyle = '#252838';
+        ctx.fillRect(rowRect.x, rowRect.y, rowRect.w, rowRect.h);
+      }
+
+      const level = game.save.shop[def.id] || 0;
+      drawPixelText(ctx, def.name, rowRect.x + 24, rowY, {
+        scale: 4,
+        color: '#e8ecf4',
+        outline: OUTLINE,
+      });
+      drawPixelText(ctx, def.description, rowRect.x + 24, rowY + 40, {
+        scale: 3,
+        color: TEXT_DIM,
+      });
+
+      drawPixelText(ctx, `LV ${level}/${def.maxLevel}`, rowRect.x + 890, rowY + 12, {
+        scale: 4,
+        color: level > 0 ? GOLD : TEXT_DIM,
+      });
+
+      if (level >= def.maxLevel) {
+        drawPixelText(ctx, 'MAX', rowRect.x + 1140, rowY + 12, { scale: 4, color: GOLD });
+      } else {
+        const cost = upgradeCost(def, level);
+        const affordable = game.save.totalCoins >= cost;
+        drawPixelText(ctx, `COST ${cost}`, rowRect.x + 1100, rowY + 12, {
+          scale: 4,
+          color: affordable ? '#5cd65c' : '#e04040',
+        });
+      }
+    });
+
+    // BACK and RESET SAVE at the bottom of the panel.
+    const bottomY = panelY + panelH - 90;
+    const backRect = { x: panelX + 220, y: bottomY, w: 360, h: 62 };
+    const resetRect = { x: panelX + panelW - 580, y: bottomY, w: 360, h: 62 };
+    this.buttonRects.push(backRect, resetRect);
+
+    this.drawShopButton(ctx, backRect, 'BACK', this.selectedIndex === SHOP_UPGRADES.length, false);
+    this.drawShopButton(
+      ctx, resetRect, 'RESET SAVE',
+      this.selectedIndex === SHOP_UPGRADES.length + 1, true
+    );
+
+    drawPixelText(ctx, 'ARROWS + ENTER, OR CLICK TO BUY', GAME_WIDTH / 2, panelY + panelH + 30, {
+      scale: 3,
+      color: TEXT_DIM,
+      align: 'center',
+    });
+  }
+
+  drawShopButton(ctx, rect, label, selected, danger) {
+    ctx.fillStyle = OUTLINE;
+    ctx.fillRect(rect.x - U, rect.y - U, rect.w + U * 2, rect.h + U * 2);
+    ctx.fillStyle = selected ? (danger ? '#e04040' : GOLD) : BUTTON_FACE;
+    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+
+    drawPixelText(ctx, label, rect.x + rect.w / 2, rect.y + 14, {
+      scale: 4,
+      color: selected ? OUTLINE : danger ? '#e04040' : '#e8ecf4',
+      align: 'center',
+    });
   }
 
   renderTitle(ctx, game) {
@@ -184,18 +370,24 @@ export class MenuSystem {
       align: 'center',
     });
 
-    this.renderButtons(ctx, game, 600);
+    this.renderButtons(ctx, game, 545);
 
     // Blinking hint, arcade style.
     if (Math.floor(this.time * 1.4) % 2 === 0) {
-      drawPixelText(ctx, 'PRESS ENTER OR CLICK A BUTTON', GAME_WIDTH / 2, 930, {
+      drawPixelText(ctx, 'PRESS ENTER OR CLICK A BUTTON', GAME_WIDTH / 2, 965, {
         scale: 4,
         color: TEXT_DIM,
         align: 'center',
       });
     }
 
-    drawPixelText(ctx, 'V0.3', GAME_WIDTH - 120, GAME_HEIGHT - 60, { scale: 4, color: TEXT_DIM });
+    // Lifetime coin purse, spendable in the shop.
+    drawPixelText(ctx, `COINS ${game.save.totalCoins}`, 36, GAME_HEIGHT - 60, {
+      scale: 4,
+      color: GOLD,
+      outline: OUTLINE,
+    });
+    drawPixelText(ctx, 'V0.4', GAME_WIDTH - 120, GAME_HEIGHT - 60, { scale: 4, color: TEXT_DIM });
   }
 
   renderHowTo(ctx, game) {
@@ -261,37 +453,56 @@ export class MenuSystem {
 
   renderGameOver(ctx, game) {
     // Dark red-tinted overlay above the frozen battlefield.
-    ctx.fillStyle = 'rgba(24, 8, 12, 0.82)';
+    ctx.fillStyle = 'rgba(24, 8, 12, 0.85)';
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    drawPixelText(ctx, 'GAME OVER', GAME_WIDTH / 2, 160, {
-      scale: 16,
+    drawPixelText(ctx, 'GAME OVER', GAME_WIDTH / 2, 64, {
+      scale: 12,
       color: '#e04040',
       shadeColor: '#7e2020',
       outline: OUTLINE,
       align: 'center',
     });
 
+    // The run summary.
+    const evolutions = game.weapons.owned.filter((w) => w.def.evolved).length;
     const stats = [
-      `TIME ${formatTime(game.survivalTime)}`,
-      `KILLS ${game.killCount}`,
-      `LEVEL ${game.player.level}`,
+      ['TIME', formatTime(game.survivalTime)],
+      ['LEVEL', String(game.player.level)],
+      ['KILLS', String(game.killCount)],
+      ['BOSSES', String(game.bossesKilled)],
+      ['EVOLUTIONS', String(evolutions)],
+      ['COINS EARNED', String(game.coins)],
+      ['TOTAL COINS', String(game.save.totalCoins)],
     ];
-    stats.forEach((line, i) => {
-      drawPixelText(ctx, line, GAME_WIDTH / 2, 380 + i * 80, {
-        scale: 6,
-        color: '#e8ecf4',
-        shadeColor: '#9aa3b8',
+    stats.forEach(([label, value], i) => {
+      const y = 195 + i * 45;
+      drawPixelText(ctx, label, GAME_WIDTH / 2 - 60 - measurePixelText(label, 4), y, {
+        scale: 4,
+        color: TEXT_DIM,
+      });
+      drawPixelText(ctx, value, GAME_WIDTH / 2 + 60, y, {
+        scale: 4,
+        color: i >= 5 ? GOLD : '#e8ecf4', // coin rows glow gold
         outline: OUTLINE,
-        align: 'center',
       });
     });
 
-    this.renderButtons(ctx, game, 680);
+    // Weapons carried, evolved ones marked.
+    const loadout = game.weapons.owned
+      .map((w) => (w.def.evolved ? `${w.def.short} EVO` : `${w.def.short} ${w.level}`))
+      .join('  ');
+    drawPixelText(ctx, `WEAPONS  ${loadout}`, GAME_WIDTH / 2, 530, {
+      scale: 3,
+      color: '#c9cede',
+      align: 'center',
+    });
+
+    this.renderButtons(ctx, game, 600);
 
     if (Math.floor(this.time * 1.4) % 2 === 0) {
-      drawPixelText(ctx, 'PRESS R TO RESTART', GAME_WIDTH / 2, 980, {
-        scale: 4,
+      drawPixelText(ctx, 'PRESS R TO RESTART', GAME_WIDTH / 2, 1000, {
+        scale: 3,
         color: TEXT_DIM,
         align: 'center',
       });

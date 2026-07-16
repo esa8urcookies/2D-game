@@ -157,6 +157,13 @@ export const WAVE_CONFIG = {
   finalWaveSqueezeMinutes: 10,
 };
 
+// --- Coins ----------------------------------------------------------------
+
+export const COIN_CONFIG = {
+  dropChance: 0.05, // chance any normal enemy drops a coin
+  value: 1,
+};
+
 // --- Treasure chests ----------------------------------------------------
 
 export const CHEST_CONFIG = {

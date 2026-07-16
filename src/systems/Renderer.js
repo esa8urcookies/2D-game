@@ -19,6 +19,7 @@ export class Renderer {
     // Back-to-front: gems and chests on the ground, then enemies,
     // the player, weapon effects, projectiles, and damage numbers.
     this.drawAll(game.gems, game.camera);
+    this.drawAll(game.coinPickups, game.camera);
     this.drawAll(game.chests, game.camera);
     this.drawAll(game.enemies, game.camera);
     game.player.render(this.ctx, game.camera);

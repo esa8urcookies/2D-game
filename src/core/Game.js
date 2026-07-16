@@ -17,12 +17,16 @@ import { MenuSystem } from '../systems/MenuSystem.js';
 import { UpgradeSystem } from '../systems/UpgradeSystem.js';
 import { ChestSystem } from '../systems/ChestSystem.js';
 import { Chest } from '../entities/Chest.js';
+import { Coin } from '../entities/Coin.js';
+import { loadSave, persistSave } from './SaveData.js';
+import { SHOP_UPGRADES } from '../config/ShopUpgrades.js';
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
   PLAYER_CONFIG,
   XP_CONFIG,
   ENEMY_TYPES,
+  COIN_CONFIG,
 } from '../config/GameConfig.js';
 
 // If the browser tab lags or is backgrounded, a single frame could
@@ -47,6 +51,9 @@ export class Game {
     // 'menu', 'playing', 'paused', 'levelup', 'chest', 'gameover'
     this.state = 'menu';
 
+    // Persistent progress: total coins + permanent shop upgrades.
+    this.save = loadSave();
+
     // startRun() fills everything in properly; calling it here gives
     // the menu's drifting background a world to point the camera at.
     this.startRun();
@@ -66,12 +73,15 @@ export class Game {
     this.damageTexts = [];
     this.gems = [];
     this.chests = [];
-    this.coins = 0;
+    this.coinPickups = [];
+    this.coins = 0; // coins earned THIS run; banked on death
     this.spawner = new Spawner();
     this.weapons = new WeaponSystem();
     this.weapons.addWeapon('arcaneBolt'); // the starting weapon
     this.killCount = 0;
+    this.bossesKilled = 0;
     this.survivalTime = 0;
+    this.coinsBanked = false; // guards against double-banking
 
     // Live run stats — passives change these, a new run resets them.
     // (Per-weapon stats live on the weapons themselves.)
@@ -80,10 +90,19 @@ export class Game {
       cooldownMultiplier: 1, // Spellbook lowers this
       damageMultiplier: 1, // Power Stone raises this
       moveSpeedMultiplier: 1, // Wind Boots raise this
-      luck: 0, // Clover Coin; used by chests later
+      xpMultiplier: 1, // Old Wisdom (shop) raises this
+      luck: 0, // Clover Coin; boosts chest upgrades
     };
     this.passives = {}; // passive id -> level owned
     this.pendingLevelUps = 0;
+
+    // Permanent shop upgrades kick in at the start of every run.
+    if (this.save) {
+      for (const def of SHOP_UPGRADES) {
+        const level = this.save.shop[def.id] || 0;
+        if (level > 0) def.apply(this, level);
+      }
+    }
 
     this.camera.follow(this.player);
     this.menu.screen = 'title';
@@ -154,9 +173,9 @@ export class Game {
     this.gainXP(gem.value);
   }
 
-  /** Add XP and bank any level-ups it earns. */
+  /** Add XP (boosted by Old Wisdom) and bank any level-ups. */
   gainXP(amount) {
-    this.player.xp += amount;
+    this.player.xp += amount * this.stats.xpMultiplier;
 
     // Handle several level-ups at once (a big gem can do that):
     // bank them, then show one upgrade screen per level.
@@ -222,6 +241,7 @@ export class Game {
     this.weapons.update(deltaTime, this);
     for (const projectile of this.projectiles) projectile.update(deltaTime, this);
     for (const gem of this.gems) gem.update(deltaTime, this);
+    for (const coin of this.coinPickups) coin.update(deltaTime, this);
     for (const chest of this.chests) chest.update(deltaTime, this);
     for (const text of this.damageTexts) text.update(deltaTime, this);
 
@@ -235,6 +255,13 @@ export class Game {
       this.state = 'gameover';
       this.pendingLevelUps = 0;
       this.menu.selectedIndex = 0;
+
+      // Bank this run's coins into the permanent save, exactly once.
+      if (!this.coinsBanked) {
+        this.coinsBanked = true;
+        this.save.totalCoins += this.coins;
+        persistSave(this.save);
+      }
       return;
     }
 
@@ -254,15 +281,19 @@ export class Game {
     for (const enemy of this.enemies) {
       if (enemy.dead) {
         this.killCount += 1;
+        if (enemy.isBoss) this.bossesKilled += 1;
 
         // Big enemies guarantee a big gem; the rest roll for one.
         const type = ENEMY_TYPES[enemy.typeName];
         const tier = type.xpValue ? tierForValue(type.xpValue) : rollGemTier();
         this.gems.push(new XPGem(enemy.x, enemy.y, tier));
 
-        // Bosses leave a treasure chest behind.
+        // Bosses leave a treasure chest behind; normal enemies have
+        // a small chance to drop a coin.
         if (type.dropsChest) {
           this.chests.push(new Chest(enemy.x, enemy.y));
+        } else if (Math.random() < COIN_CONFIG.dropChance) {
+          this.coinPickups.push(new Coin(enemy.x, enemy.y));
         }
       } else {
         survivors.push(enemy);
@@ -272,6 +303,7 @@ export class Game {
 
     this.projectiles = this.projectiles.filter((projectile) => !projectile.dead);
     this.gems = this.gems.filter((gem) => !gem.dead);
+    this.coinPickups = this.coinPickups.filter((coin) => !coin.dead);
     this.chests = this.chests.filter((chest) => !chest.dead);
     this.damageTexts = this.damageTexts.filter((text) => !text.dead);
   }

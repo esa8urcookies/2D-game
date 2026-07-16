@@ -54,7 +54,7 @@ export class UISystem {
       outline: '#16161f',
     });
 
-    this.drawWaveInfo(ctx, game.spawner);
+    this.drawWaveInfo(ctx, game);
     this.drawBossBar(ctx, game);
 
     // Coin purse, under the kill counter.
@@ -95,7 +95,8 @@ export class UISystem {
    * The small always-on wave label under the timer, plus the big
    * announcement banner for a few seconds when a new wave begins.
    */
-  drawWaveInfo(ctx, spawner) {
+  drawWaveInfo(ctx, game) {
+    const spawner = game.spawner;
     if (spawner.currentWaveIndex < 0) return;
 
     // Small persistent label.
@@ -105,8 +106,9 @@ export class UISystem {
       align: 'center',
     });
 
-    // Announcement banner, fading out over its last second.
-    if (spawner.announcementTimer > 0 && spawner.announcement) {
+    // Announcement banner, fading out over its last second. Only
+    // while playing, so it never bleeds through overlay screens.
+    if (spawner.announcementTimer > 0 && spawner.announcement && game.state === 'playing') {
       ctx.save();
       ctx.globalAlpha = Math.min(1, spawner.announcementTimer);
 
