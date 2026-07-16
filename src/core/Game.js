@@ -67,12 +67,16 @@ export class Game {
     this.killCount = 0;
     this.survivalTime = 0;
 
-    // Live run stats — upgrades change these, a new run resets them.
-    // (Weapon stats live on the weapons themselves.)
+    // Live run stats — passives change these, a new run resets them.
+    // (Per-weapon stats live on the weapons themselves.)
     this.stats = {
       magnetRadius: PLAYER_CONFIG.magnetRadius,
+      cooldownMultiplier: 1, // Spellbook lowers this
+      damageMultiplier: 1, // Power Stone raises this
+      moveSpeedMultiplier: 1, // Wind Boots raise this
+      luck: 0, // Clover Coin; used by chests later
     };
-    this.upgradeLevels = {}; // upgrade id -> times taken
+    this.passives = {}; // passive id -> level owned
     this.pendingLevelUps = 0;
 
     this.camera.follow(this.player);
@@ -129,17 +133,24 @@ export class Game {
 
   /**
    * Damage an enemy with full feedback: floating number, hit flash,
-   * and optional knockback. Every weapon deals damage through this.
+   * and optional knockback. Every weapon deals damage through this,
+   * so the Power Stone's global multiplier applies in one place.
    */
   damageEnemy(enemy, amount, dirX = 0, dirY = 0, knockbackForce = 0) {
-    enemy.takeDamage(amount, dirX, dirY, knockbackForce);
-    this.addDamageText(amount, enemy.x, enemy.y - 60);
+    const total = Math.round(amount * this.stats.damageMultiplier);
+    enemy.takeDamage(total, dirX, dirY, knockbackForce);
+    this.addDamageText(total, enemy.x, enemy.y - 60);
   }
 
   /** Called by a gem when the player picks it up. */
   collectGem(gem) {
     gem.dead = true;
-    this.player.xp += gem.value;
+    this.gainXP(gem.value);
+  }
+
+  /** Add XP and bank any level-ups it earns. */
+  gainXP(amount) {
+    this.player.xp += amount;
 
     // Handle several level-ups at once (a big gem can do that):
     // bank them, then show one upgrade screen per level.

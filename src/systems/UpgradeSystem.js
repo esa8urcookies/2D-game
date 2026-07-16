@@ -1,11 +1,13 @@
 // The level-up screen: freezes the action and offers 3 random cards.
 // Cards come from two pools:
-//   - passive upgrades (config/Upgrades.js)
-//   - weapons: new ones to unlock, or next levels of owned ones
+//   - weapons (config/Weapons.js): new ones, or next levels of owned
+//   - passive items (config/Passives.js): new ones, or next levels
+// If everything is maxed, fallback cards (heal / XP) appear instead,
+// so a level-up is never wasted.
 // Pick with the mouse, the 1/2/3 keys, or arrows + Enter.
 
-import { UPGRADES } from '../config/Upgrades.js';
 import { WEAPON_DEFS } from '../config/Weapons.js';
+import { PASSIVE_DEFS, FALLBACK_CHOICES } from '../config/Passives.js';
 import { drawPixelText } from '../assets/PixelFont.js';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
@@ -38,25 +40,7 @@ export class UpgradeSystem {
   buildChoicePool(game) {
     const pool = [];
 
-    // Passive upgrades.
-    for (const upgrade of UPGRADES) {
-      const level = game.upgradeLevels[upgrade.id] || 0;
-      if (level >= upgrade.maxLevel) continue;
-      if (upgrade.isUseful && !upgrade.isUseful(game)) continue;
-
-      pool.push({
-        name: upgrade.name,
-        description: upgrade.description,
-        tag: level === 0 ? 'NEW!' : `LV ${level} > ${level + 1}`,
-        tagColor: level === 0 ? NEW_GREEN : TEXT_DIM,
-        apply() {
-          upgrade.apply(game);
-          game.upgradeLevels[upgrade.id] = level + 1;
-        },
-      });
-    }
-
-    // Weapons: unlock new, or level up owned.
+    // Weapons: unlock new, or level up owned (maxed ones drop out).
     for (const id of Object.keys(WEAPON_DEFS)) {
       const def = WEAPON_DEFS[id];
       const owned = game.weapons.getWeapon(id);
@@ -86,19 +70,48 @@ export class UpgradeSystem {
       }
     }
 
+    // Passive items: same pattern, tracked in game.passives.
+    for (const id of Object.keys(PASSIVE_DEFS)) {
+      const def = PASSIVE_DEFS[id];
+      const level = game.passives[id] || 0;
+      if (level >= def.maxLevel) continue;
+
+      pool.push({
+        name: def.name,
+        description: def.description,
+        tag: level === 0 ? 'NEW PASSIVE!' : `LV ${level} > ${level + 1}`,
+        tagColor: level === 0 ? NEW_GREEN : TEXT_DIM,
+        apply() {
+          def.apply(game);
+          game.passives[id] = level + 1;
+        },
+      });
+    }
+
     return pool;
   }
 
-  /** Pick up to 3 random, currently-useful cards. */
+  /** Pick up to 3 random cards; fall back to heal/XP if all maxed. */
   rollChoices(game) {
-    const pool = this.buildChoicePool(game);
+    let pool = this.buildChoicePool(game);
+
+    if (pool.length === 0) {
+      pool = FALLBACK_CHOICES.map((choice) => ({
+        name: choice.name,
+        description: choice.description,
+        tag: 'BONUS',
+        tagColor: TEXT_DIM,
+        apply: () => choice.apply(game),
+      }));
+    }
+
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     this.choices = shuffled.slice(0, 3);
     this.selectedIndex = 0;
     this.time = 0;
   }
 
-  /** True if there was nothing to offer (everything maxed out). */
+  /** True if there was nothing to offer at all. */
   isEmpty() {
     return this.choices.length === 0;
   }

@@ -52,8 +52,10 @@ export class Player extends Entity {
 
   update(deltaTime, game) {
     const move = game.input.getMovementDirection();
-    this.velocityX = move.x * this.moveSpeed;
-    this.velocityY = move.y * this.moveSpeed;
+    // Wind Boots raise the multiplier; base speed stays in config.
+    const speed = this.moveSpeed * game.stats.moveSpeedMultiplier;
+    this.velocityX = move.x * speed;
+    this.velocityY = move.y * speed;
     super.update(deltaTime, game);
 
     this.isMoving = move.x !== 0 || move.y !== 0;

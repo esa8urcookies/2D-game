@@ -3,6 +3,7 @@
 // Everything is positioned in the internal 1920x1080 space.
 
 import { GAME_WIDTH, GAME_HEIGHT, XP_CONFIG } from '../config/GameConfig.js';
+import { PASSIVE_DEFS } from '../config/Passives.js';
 import { formatTime } from '../core/MathUtils.js';
 import { drawPixelText } from '../assets/PixelFont.js';
 import { drawBar, healthColor } from '../core/DrawUtils.js';
@@ -34,7 +35,7 @@ export class UISystem {
 
     this.drawHealthBar(ctx, game.player);
     this.drawXPBar(ctx, game.player);
-    this.drawWeaponList(ctx, game.weapons.owned);
+    this.drawEquipment(ctx, game);
 
     // Survival timer, top center.
     drawPixelText(ctx, formatTime(game.survivalTime), GAME_WIDTH / 2, 28, {
@@ -64,15 +65,17 @@ export class UISystem {
   }
 
   /**
-   * Owned weapons under the HP bar: a colored chip per weapon with
-   * its short name and level ("MAX" at the cap).
+   * Owned weapons and passives under the HP bar: a colored chip and
+   * "SHORT LVn" per item ("MAX" at the cap). Weapons get square
+   * chips, passives get diamond chips so the groups read apart.
    */
-  drawWeaponList(ctx, weapons) {
-    weapons.forEach((weapon, index) => {
-      const y = 92 + index * 42;
+  drawEquipment(ctx, game) {
+    let row = 0;
+
+    for (const weapon of game.weapons.owned) {
+      const y = 92 + row * 42;
       const label = weapon.isMaxLevel ? 'MAX' : `LV${weapon.level}`;
 
-      // Color chip in the weapon's signature color.
       ctx.fillStyle = '#16161f';
       ctx.fillRect(24, y, 26, 26);
       ctx.fillStyle = weapon.def.color;
@@ -83,7 +86,31 @@ export class UISystem {
         color: '#e8ecf4',
         outline: '#16161f',
       });
-    });
+      row += 1;
+    }
+
+    for (const [id, level] of Object.entries(game.passives)) {
+      const def = PASSIVE_DEFS[id];
+      const y = 92 + row * 42;
+      const label = level >= def.maxLevel ? 'MAX' : `LV${level}`;
+
+      // Diamond chip: a square rotated 45 degrees.
+      ctx.save();
+      ctx.translate(37, y + 13);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = '#16161f';
+      ctx.fillRect(-11, -11, 22, 22);
+      ctx.fillStyle = def.color;
+      ctx.fillRect(-7, -7, 14, 14);
+      ctx.restore();
+
+      drawPixelText(ctx, `${def.short} ${label}`, 64, y + 2, {
+        scale: 3,
+        color: '#c9cede',
+        outline: '#16161f',
+      });
+      row += 1;
+    }
   }
 
   /** Full-width XP progress bar along the bottom, with the level. */

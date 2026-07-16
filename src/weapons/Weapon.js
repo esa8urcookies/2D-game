@@ -37,7 +37,8 @@ export class Weapon {
     if (this.cooldown > 0) return;
 
     if (this.fire(game)) {
-      this.cooldown = this.stats.cooldown;
+      // The Spellbook passive shortens every weapon's cooldown.
+      this.cooldown = this.stats.cooldown * game.stats.cooldownMultiplier;
     }
   }
 
