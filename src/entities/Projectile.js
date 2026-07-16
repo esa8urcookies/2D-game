@@ -6,12 +6,12 @@ import { Entity } from './Entity.js';
 import { WEAPON_CONFIG, EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 export class Projectile extends Entity {
-  constructor(x, y, directionX, directionY) {
+  constructor(x, y, directionX, directionY, { speed, damage }) {
     super(x, y, WEAPON_CONFIG.projectileRadius);
 
-    this.velocityX = directionX * WEAPON_CONFIG.projectileSpeed;
-    this.velocityY = directionY * WEAPON_CONFIG.projectileSpeed;
-    this.damage = WEAPON_CONFIG.projectileDamage;
+    this.velocityX = directionX * speed;
+    this.velocityY = directionY * speed;
+    this.damage = damage;
   }
 
   update(deltaTime, game) {

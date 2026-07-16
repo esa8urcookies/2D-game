@@ -1,11 +1,11 @@
 // The player's automatic weapon.
 // Every fireInterval seconds it shoots one projectile at the nearest
 // enemy. If there are no enemies, it stays ready and fires the moment
-// one appears. Stats live in WEAPON_CONFIG (GameConfig.js).
+// one appears. Live stats come from game.stats, so upgrades apply
+// instantly (base values are set in GameConfig.js).
 
 import { Projectile } from '../entities/Projectile.js';
 import { normalize, distance } from '../core/MathUtils.js';
-import { WEAPON_CONFIG } from '../config/GameConfig.js';
 
 export class WeaponSystem {
   constructor() {
@@ -25,7 +25,7 @@ export class WeaponSystem {
     }
 
     this.fireAt(game, target);
-    this.cooldown = WEAPON_CONFIG.fireInterval;
+    this.cooldown = game.stats.fireInterval;
   }
 
   findNearestEnemy(player, enemies) {
@@ -47,6 +47,11 @@ export class WeaponSystem {
     const player = game.player;
     const direction = normalize(target.x - player.x, target.y - player.y);
 
-    game.projectiles.push(new Projectile(player.x, player.y, direction.x, direction.y));
+    game.projectiles.push(
+      new Projectile(player.x, player.y, direction.x, direction.y, {
+        speed: game.stats.projectileSpeed,
+        damage: game.stats.damage,
+      })
+    );
   }
 }

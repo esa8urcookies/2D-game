@@ -16,8 +16,9 @@ export class Renderer {
   render(game) {
     this.drawBackground(game.camera);
 
-    // Back-to-front: enemies under the player, projectiles and
-    // damage numbers on top.
+    // Back-to-front: gems on the ground, then enemies, the player,
+    // projectiles, and damage numbers on top.
+    this.drawAll(game.gems, game.camera);
     this.drawAll(game.enemies, game.camera);
     game.player.render(this.ctx, game.camera);
     this.drawAll(game.projectiles, game.camera);

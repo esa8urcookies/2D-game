@@ -23,6 +23,26 @@ export const PLAYER_CONFIG = {
   // near-misses feel fair instead of frustrating.
   collisionRadius: 45,
   invincibilitySeconds: 1.0, // grace period after taking a hit
+  magnetRadius: 170, // XP gems fly to the player inside this range
+};
+
+// --- XP and leveling ----------------------------------------------------
+
+export const XP_CONFIG = {
+  pickupRadius: 60, // gems this close are collected instantly
+  magnetSpeed: 780, // how fast attracted gems fly to the player
+  // Gem tiers, checked in order: rare first. Every enemy death rolls
+  // once; if no rare tier hits, the common 1-XP gem drops.
+  gemTiers: [
+    { value: 10, color: '#e04040', shine: '#ff9c9c', chance: 0.02 }, // red
+    { value: 5, color: '#3ecf5e', shine: '#a8f0b4', chance: 0.1 }, // green
+    { value: 1, color: '#4fc3f7', shine: '#c2ecff', chance: 1 }, // blue
+  ],
+  // XP needed to go from `level` to the next one. Linear growth keeps
+  // early levels fast and later ones steadily slower.
+  xpForLevel(level) {
+    return 5 + (level - 1) * 4;
+  },
 };
 
 // --- Enemies ----------------------------------------------------------

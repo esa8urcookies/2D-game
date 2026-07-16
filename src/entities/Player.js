@@ -23,9 +23,10 @@ export class Player extends Entity {
     this.maxHealth = PLAYER_CONFIG.maxHealth;
     this.health = PLAYER_CONFIG.maxHealth;
 
-    // Character level. Leveling up arrives with the XP system; it
-    // already exists so the game-over screen can show it.
+    // Experience and level. XP counts progress toward the NEXT
+    // level only; the Game resets it on each level-up.
     this.level = 1;
+    this.xp = 0;
 
     this.spriteSize = SPRITE_SIZE;
 
