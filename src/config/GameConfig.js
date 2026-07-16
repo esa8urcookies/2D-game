@@ -76,12 +76,10 @@ export const ENEMY_CONFIG = {
 
 // --- Weapons ----------------------------------------------------------
 
+// Per-weapon stats live in config/Weapons.js. This only holds
+// weapon behavior shared by all projectiles.
 export const WEAPON_CONFIG = {
-  fireInterval: 0.6, // seconds between shots
-  projectileSpeed: 950,
-  projectileDamage: 10,
-  projectileRadius: 12,
-  knockbackForce: 420, // how hard hits shove enemies back
+  knockbackForce: 420, // how hard projectile hits shove enemies back
 };
 
 // --- Enemy spawning ---------------------------------------------------

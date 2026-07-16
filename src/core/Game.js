@@ -19,7 +19,6 @@ import {
   GAME_WIDTH,
   GAME_HEIGHT,
   PLAYER_CONFIG,
-  WEAPON_CONFIG,
   XP_CONFIG,
 } from '../config/GameConfig.js';
 
@@ -64,14 +63,13 @@ export class Game {
     this.gems = [];
     this.spawner = new Spawner();
     this.weapons = new WeaponSystem();
+    this.weapons.addWeapon('arcaneBolt'); // the starting weapon
     this.killCount = 0;
     this.survivalTime = 0;
 
     // Live run stats — upgrades change these, a new run resets them.
+    // (Weapon stats live on the weapons themselves.)
     this.stats = {
-      damage: WEAPON_CONFIG.projectileDamage,
-      fireInterval: WEAPON_CONFIG.fireInterval,
-      projectileSpeed: WEAPON_CONFIG.projectileSpeed,
       magnetRadius: PLAYER_CONFIG.magnetRadius,
     };
     this.upgradeLevels = {}; // upgrade id -> times taken
@@ -127,6 +125,15 @@ export class Game {
   /** Spawn a floating damage number in the world. */
   addDamageText(amount, x, y) {
     this.damageTexts.push(new FloatingText(amount, x, y));
+  }
+
+  /**
+   * Damage an enemy with full feedback: floating number, hit flash,
+   * and optional knockback. Every weapon deals damage through this.
+   */
+  damageEnemy(enemy, amount, dirX = 0, dirY = 0, knockbackForce = 0) {
+    enemy.takeDamage(amount, dirX, dirY, knockbackForce);
+    this.addDamageText(amount, enemy.x, enemy.y - 60);
   }
 
   /** Called by a gem when the player picks it up. */

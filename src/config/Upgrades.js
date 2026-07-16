@@ -1,8 +1,8 @@
-// The upgrade pool for level-ups.
+// Passive (non-weapon) upgrades for level-ups.
 //
-// Every upgrade is pure data plus one apply() function, so adding a
-// new upgrade is just adding an entry here — the level-up screen,
-// key handling, and level tracking all work automatically.
+// Weapon damage/speed upgrades live in each weapon's level table
+// (config/Weapons.js); this pool is for everything about the player
+// themselves. The level-up screen mixes both pools automatically.
 //
 //   id          unique key (used to track how many times it's taken)
 //   name        card title (pixel font, keep it short)
@@ -12,33 +12,6 @@
 //   apply       changes the live game state
 
 export const UPGRADES = [
-  {
-    id: 'damage',
-    name: 'POWER SHOT',
-    description: '+5 WEAPON DAMAGE',
-    maxLevel: 8,
-    apply(game) {
-      game.stats.damage += 5;
-    },
-  },
-  {
-    id: 'fireRate',
-    name: 'RAPID FIRE',
-    description: 'SHOOT 12% FASTER',
-    maxLevel: 8,
-    apply(game) {
-      game.stats.fireInterval *= 0.88;
-    },
-  },
-  {
-    id: 'projectileSpeed',
-    name: 'SWIFT BOLTS',
-    description: '+20% PROJECTILE SPEED',
-    maxLevel: 5,
-    apply(game) {
-      game.stats.projectileSpeed *= 1.2;
-    },
-  },
   {
     id: 'moveSpeed',
     name: 'FLEET FEET',

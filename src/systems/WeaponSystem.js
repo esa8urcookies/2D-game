@@ -1,57 +1,43 @@
-// The player's automatic weapon.
-// Every fireInterval seconds it shoots one projectile at the nearest
-// enemy. If there are no enemies, it stays ready and fires the moment
-// one appears. Live stats come from game.stats, so upgrades apply
-// instantly (base values are set in GameConfig.js).
+// The player's arsenal: every owned weapon attacks automatically on
+// its own rhythm. Weapon numbers live in config/Weapons.js; weapon
+// behaviors live in src/weapons/.
 
-import { Projectile } from '../entities/Projectile.js';
-import { normalize, distance } from '../core/MathUtils.js';
+import { ArcaneBolt } from '../weapons/ArcaneBolt.js';
+import { OrbitingBlade } from '../weapons/OrbitingBlade.js';
+import { HolyPulse } from '../weapons/HolyPulse.js';
+import { LightningMark } from '../weapons/LightningMark.js';
+
+// Which class implements each weapon id from config/Weapons.js.
+const WEAPON_CLASSES = {
+  arcaneBolt: ArcaneBolt,
+  orbitingBlade: OrbitingBlade,
+  holyPulse: HolyPulse,
+  lightningMark: LightningMark,
+};
 
 export class WeaponSystem {
   constructor() {
-    this.cooldown = 0;
+    this.owned = [];
+  }
+
+  addWeapon(id) {
+    this.owned.push(new WEAPON_CLASSES[id](id));
+  }
+
+  /** The owned instance of a weapon, or undefined. */
+  getWeapon(id) {
+    return this.owned.find((weapon) => weapon.id === id);
   }
 
   update(deltaTime, game) {
-    this.cooldown = Math.max(0, this.cooldown - deltaTime);
-
-    if (this.cooldown > 0) {
-      return;
+    for (const weapon of this.owned) {
+      weapon.update(deltaTime, game);
     }
-
-    const target = this.findNearestEnemy(game.player, game.enemies);
-    if (!target) {
-      return; // stay ready; cooldown only starts after an actual shot
-    }
-
-    this.fireAt(game, target);
-    this.cooldown = game.stats.fireInterval;
   }
 
-  findNearestEnemy(player, enemies) {
-    let nearest = null;
-    let nearestDistance = Infinity;
-
-    for (const enemy of enemies) {
-      const d = distance(player.x, player.y, enemy.x, enemy.y);
-      if (d < nearestDistance) {
-        nearestDistance = d;
-        nearest = enemy;
-      }
+  render(ctx, camera, game) {
+    for (const weapon of this.owned) {
+      weapon.render(ctx, camera, game);
     }
-
-    return nearest;
-  }
-
-  fireAt(game, target) {
-    const player = game.player;
-    const direction = normalize(target.x - player.x, target.y - player.y);
-
-    game.projectiles.push(
-      new Projectile(player.x, player.y, direction.x, direction.y, {
-        speed: game.stats.projectileSpeed,
-        damage: game.stats.damage,
-      })
-    );
   }
 }

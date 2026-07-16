@@ -34,6 +34,7 @@ export class UISystem {
 
     this.drawHealthBar(ctx, game.player);
     this.drawXPBar(ctx, game.player);
+    this.drawWeaponList(ctx, game.weapons.owned);
 
     // Survival timer, top center.
     drawPixelText(ctx, formatTime(game.survivalTime), GAME_WIDTH / 2, 28, {
@@ -60,6 +61,29 @@ export class UISystem {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.fillText(`FPS: ${this.fps}  Enemies: ${game.enemies.length}`, 24, GAME_HEIGHT - 100);
     ctx.restore();
+  }
+
+  /**
+   * Owned weapons under the HP bar: a colored chip per weapon with
+   * its short name and level ("MAX" at the cap).
+   */
+  drawWeaponList(ctx, weapons) {
+    weapons.forEach((weapon, index) => {
+      const y = 92 + index * 42;
+      const label = weapon.isMaxLevel ? 'MAX' : `LV${weapon.level}`;
+
+      // Color chip in the weapon's signature color.
+      ctx.fillStyle = '#16161f';
+      ctx.fillRect(24, y, 26, 26);
+      ctx.fillStyle = weapon.def.color;
+      ctx.fillRect(28, y + 4, 18, 18);
+
+      drawPixelText(ctx, `${weapon.def.short} ${label}`, 64, y + 2, {
+        scale: 3,
+        color: '#e8ecf4',
+        outline: '#16161f',
+      });
+    });
   }
 
   /** Full-width XP progress bar along the bottom, with the level. */

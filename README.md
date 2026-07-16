@@ -60,7 +60,14 @@ src/entities/Player.js           Movement, health, walk animation
 src/entities/Enemy.js            Chasing, knockback, health bar
 src/entities/Projectile.js       Auto-attack shots
 src/entities/FloatingText.js     Rising damage numbers
-src/entities/XPGem.js            (later step)
+src/entities/XPGem.js            XP gems with magnet attraction
+src/config/Weapons.js            Weapon stat tables (levels 1-8)
+src/config/Upgrades.js           Passive upgrade pool
+src/weapons/Weapon.js            Weapon base class (level + cooldown)
+src/weapons/ArcaneBolt.js        Projectile at nearest enemy
+src/weapons/OrbitingBlade.js     Blades circling the player
+src/weapons/HolyPulse.js         Area burst around the player
+src/weapons/LightningMark.js     Strikes random visible enemies
 src/systems/Renderer.js          Background + draw order + culling
 src/systems/Spawner.js           Off-screen ring spawning + ramp-up
 src/systems/CollisionSystem.js   Projectile/enemy/player collisions

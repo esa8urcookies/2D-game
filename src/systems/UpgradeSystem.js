@@ -1,8 +1,11 @@
-// The level-up screen: freezes the action and offers 3 random
-// upgrade cards. Pick with the mouse, the 1/2/3 keys, or arrows +
-// Enter. The upgrade pool itself lives in config/Upgrades.js.
+// The level-up screen: freezes the action and offers 3 random cards.
+// Cards come from two pools:
+//   - passive upgrades (config/Upgrades.js)
+//   - weapons: new ones to unlock, or next levels of owned ones
+// Pick with the mouse, the 1/2/3 keys, or arrows + Enter.
 
 import { UPGRADES } from '../config/Upgrades.js';
+import { WEAPON_DEFS } from '../config/Weapons.js';
 import { drawPixelText } from '../assets/PixelFont.js';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
@@ -12,6 +15,7 @@ const OUTLINE = '#16161f';
 const CARD_FACE = '#232633';
 const CARD_EDGE = '#3a3f4e';
 const TEXT_DIM = '#8a90a3';
+const NEW_GREEN = '#5cd65c';
 
 const CARD_W = 460;
 const CARD_H = 380;
@@ -27,21 +31,68 @@ export class UpgradeSystem {
     this.cardRects = [];
   }
 
-  /** How many times an upgrade has been taken this run. */
-  levelOf(game, upgrade) {
-    return game.upgradeLevels[upgrade.id] || 0;
+  /**
+   * Every card the player could be offered right now. Each choice is
+   * a plain object: { name, description, tag, tagColor, apply }.
+   */
+  buildChoicePool(game) {
+    const pool = [];
+
+    // Passive upgrades.
+    for (const upgrade of UPGRADES) {
+      const level = game.upgradeLevels[upgrade.id] || 0;
+      if (level >= upgrade.maxLevel) continue;
+      if (upgrade.isUseful && !upgrade.isUseful(game)) continue;
+
+      pool.push({
+        name: upgrade.name,
+        description: upgrade.description,
+        tag: level === 0 ? 'NEW!' : `LV ${level} > ${level + 1}`,
+        tagColor: level === 0 ? NEW_GREEN : TEXT_DIM,
+        apply() {
+          upgrade.apply(game);
+          game.upgradeLevels[upgrade.id] = level + 1;
+        },
+      });
+    }
+
+    // Weapons: unlock new, or level up owned.
+    for (const id of Object.keys(WEAPON_DEFS)) {
+      const def = WEAPON_DEFS[id];
+      const owned = game.weapons.getWeapon(id);
+
+      if (!owned) {
+        pool.push({
+          name: def.name,
+          description: def.description,
+          tag: 'NEW WEAPON!',
+          tagColor: NEW_GREEN,
+          apply() {
+            game.weapons.addWeapon(id);
+          },
+        });
+      } else if (!owned.isMaxLevel) {
+        // levels[] is 0-indexed, so the entry for the NEXT level is
+        // levels[owned.level]; its upgradeText says what improves.
+        pool.push({
+          name: def.name,
+          description: def.levels[owned.level].upgradeText,
+          tag: `LV ${owned.level} > ${owned.level + 1}`,
+          tagColor: TEXT_DIM,
+          apply() {
+            owned.levelUp();
+          },
+        });
+      }
+    }
+
+    return pool;
   }
 
-  /** Pick up to 3 random, currently-useful upgrades. */
+  /** Pick up to 3 random, currently-useful cards. */
   rollChoices(game) {
-    const available = UPGRADES.filter((upgrade) => {
-      if (this.levelOf(game, upgrade) >= upgrade.maxLevel) return false;
-      if (upgrade.isUseful && !upgrade.isUseful(game)) return false;
-      return true;
-    });
-
-    // Shuffle a copy and take the first 3.
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
+    const pool = this.buildChoicePool(game);
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
     this.choices = shuffled.slice(0, 3);
     this.selectedIndex = 0;
     this.time = 0;
@@ -53,11 +104,10 @@ export class UpgradeSystem {
   }
 
   choose(game, index) {
-    const upgrade = this.choices[index];
-    if (!upgrade) return;
+    const choice = this.choices[index];
+    if (!choice) return;
 
-    upgrade.apply(game);
-    game.upgradeLevels[upgrade.id] = this.levelOf(game, upgrade) + 1;
+    choice.apply();
     game.onUpgradeChosen();
   }
 
@@ -129,10 +179,10 @@ export class UpgradeSystem {
 
     this.cardRects = [];
 
-    this.choices.forEach((upgrade, index) => {
+    this.choices.forEach((choice, index) => {
       const x = startX + index * (CARD_W + CARD_GAP);
       this.cardRects.push({ x, y, w: CARD_W, h: CARD_H });
-      this.renderCard(ctx, game, upgrade, index, x, y);
+      this.renderCard(ctx, choice, index, x, y);
     });
 
     drawPixelText(ctx, 'CLICK A CARD OR PRESS 1 2 3', GAME_WIDTH / 2, y + CARD_H + 70, {
@@ -142,7 +192,7 @@ export class UpgradeSystem {
     });
   }
 
-  renderCard(ctx, game, upgrade, index, x, y) {
+  renderCard(ctx, choice, index, x, y) {
     const selected = index === this.selectedIndex;
     const U = 6; // pixel unit for borders
 
@@ -163,30 +213,22 @@ export class UpgradeSystem {
       outline: OUTLINE,
     });
 
-    // Name (title), description, and current level.
-    drawPixelText(ctx, upgrade.name, centerX, y + 90, {
-      scale: 6,
+    // Name, effect, and progress tag.
+    drawPixelText(ctx, choice.name, centerX, y + 90, {
+      scale: 5,
       color: GOLD,
       shadeColor: GOLD_DARK,
       outline: OUTLINE,
       align: 'center',
     });
-    drawPixelText(ctx, upgrade.description, centerX, y + 190, {
+    drawPixelText(ctx, choice.description, centerX, y + 190, {
       scale: 4,
       color: '#e8ecf4',
       align: 'center',
     });
-
-    const level = this.levelOf(game, upgrade);
-    const levelLabel =
-      level === 0
-        ? 'NEW!'
-        : upgrade.maxLevel === Infinity
-          ? `TAKEN ${level}X`
-          : `LV ${level} > ${level + 1}`;
-    drawPixelText(ctx, levelLabel, centerX, y + 290, {
+    drawPixelText(ctx, choice.tag, centerX, y + 290, {
       scale: 4,
-      color: level === 0 ? '#5cd65c' : TEXT_DIM,
+      color: choice.tagColor,
       align: 'center',
     });
   }

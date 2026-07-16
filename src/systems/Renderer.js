@@ -17,10 +17,11 @@ export class Renderer {
     this.drawBackground(game.camera);
 
     // Back-to-front: gems on the ground, then enemies, the player,
-    // projectiles, and damage numbers on top.
+    // weapon effects, projectiles, and damage numbers on top.
     this.drawAll(game.gems, game.camera);
     this.drawAll(game.enemies, game.camera);
     game.player.render(this.ctx, game.camera);
+    game.weapons.render(this.ctx, game.camera, game);
     this.drawAll(game.projectiles, game.camera);
     this.drawAll(game.damageTexts, game.camera);
   }

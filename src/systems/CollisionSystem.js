@@ -20,13 +20,16 @@ export class CollisionSystem {
     this.separateEnemies(game.enemies);
   }
 
-  /** Each projectile damages the first enemy it touches, then dies. */
+  /**
+   * Each projectile damages enemies it touches. With pierce it can
+   * pass through several, but never hits the same enemy twice.
+   */
   projectilesVsEnemies(game) {
     for (const projectile of game.projectiles) {
       if (projectile.dead) continue;
 
       for (const enemy of game.enemies) {
-        if (enemy.dead) continue;
+        if (enemy.dead || projectile.alreadyHit.has(enemy)) continue;
 
         if (
           circlesOverlap(
@@ -36,11 +39,16 @@ export class CollisionSystem {
         ) {
           // Knock the enemy back along the projectile's flight path.
           const push = normalize(projectile.velocityX, projectile.velocityY);
-          enemy.takeDamage(projectile.damage, push.x, push.y, WEAPON_CONFIG.knockbackForce);
+          game.damageEnemy(
+            enemy, projectile.damage, push.x, push.y, WEAPON_CONFIG.knockbackForce
+          );
 
-          game.addDamageText(projectile.damage, enemy.x, enemy.y - 60);
-          projectile.dead = true;
-          break; // this projectile is spent
+          projectile.alreadyHit.add(enemy);
+          projectile.hitsLeft -= 1;
+          if (projectile.hitsLeft <= 0) {
+            projectile.dead = true;
+            break; // this projectile is spent
+          }
         }
       }
     }
