@@ -132,9 +132,9 @@ export class Game {
     requestAnimationFrame((time) => this.loop(time));
   }
 
-  /** Spawn a floating damage number in the world. */
-  addDamageText(amount, x, y) {
-    this.damageTexts.push(new FloatingText(amount, x, y));
+  /** Spawn floating text in the world (damage gold, healing green). */
+  addDamageText(text, x, y, color) {
+    this.damageTexts.push(new FloatingText(text, x, y, color));
   }
 
   /**

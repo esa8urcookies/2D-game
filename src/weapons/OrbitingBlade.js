@@ -17,8 +17,8 @@ export class OrbitingBlade extends Weapon {
     // Per-enemy grace timers (enemy -> seconds remaining).
     this.hitTimers = new Map();
 
-    // The blade image, built once.
-    this.sprite = buildBladeSprite();
+    // The blade image, built once. Celestial Blades get gold steel.
+    this.sprite = buildBladeSprite(this.def.evolved);
   }
 
   /** World position of blade number `index` right now. */
@@ -85,25 +85,24 @@ export class OrbitingBlade extends Weapon {
   }
 }
 
-/** A small pixel sword, drawn once. */
-function buildBladeSprite() {
+/** A small pixel sword, drawn once. Gold for the evolved form. */
+function buildBladeSprite(golden = false) {
   const small = document.createElement('canvas');
   small.width = 9;
   small.height = 21;
   const s = small.getContext('2d');
 
   // Blade.
-  s.fillStyle = '#c6cdd8';
+  s.fillStyle = golden ? '#ffd54f' : '#c6cdd8';
   s.fillRect(3, 1, 3, 13);
-  s.fillStyle = '#eef2f8'; // edge highlight
+  s.fillStyle = golden ? '#fff8dc' : '#eef2f8'; // edge highlight
   s.fillRect(3, 1, 1, 13);
-  s.fillStyle = '#eef2f8';
   s.fillRect(4, 0, 1, 1); // tip
 
   // Guard and grip.
-  s.fillStyle = '#8a6d3b';
+  s.fillStyle = golden ? '#a06e12' : '#8a6d3b';
   s.fillRect(1, 14, 7, 2);
-  s.fillStyle = '#5f4a28';
+  s.fillStyle = golden ? '#7e2020' : '#5f4a28';
   s.fillRect(3, 16, 3, 4);
 
   const canvas = document.createElement('canvas');

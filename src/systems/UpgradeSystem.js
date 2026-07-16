@@ -45,6 +45,11 @@ export class UpgradeSystem {
       const def = WEAPON_DEFS[id];
       const owned = game.weapons.getWeapon(id);
 
+      // Evolved forms only come from chests, and a base weapon that
+      // has already evolved must not be offered again.
+      if (def.evolved) continue;
+      if (def.evolvesInto && game.weapons.getWeapon(def.evolvesInto)) continue;
+
       if (!owned) {
         pool.push({
           name: def.name,

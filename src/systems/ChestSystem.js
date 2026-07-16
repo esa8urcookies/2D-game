@@ -37,8 +37,34 @@ export class ChestSystem {
     game.state = 'chest';
   }
 
+  /**
+   * A weapon is ready to evolve if it is max level, hasn't evolved
+   * yet, and the player owns its required passive.
+   */
+  findEvolutionCandidates(game) {
+    return game.weapons.owned.filter(
+      (weapon) =>
+        weapon.def.evolvesInto &&
+        weapon.isMaxLevel &&
+        (game.passives[weapon.def.evolutionRequires] || 0) > 0
+    );
+  }
+
   /** Decide and immediately apply what's inside. */
   rollReward(game) {
+    // Evolutions trump everything — one per chest, random if several
+    // weapons are ready at once.
+    const ready = this.findEvolutionCandidates(game);
+    if (ready.length > 0) {
+      const weapon = ready[Math.floor(Math.random() * ready.length)];
+      const evolved = game.weapons.evolveWeapon(weapon);
+      return {
+        title: evolved.def.name,
+        subtitle: 'A NEW POWER AWAKENS',
+        isEvolution: true,
+      };
+    }
+
     const luckBonus = game.stats.luck * CHEST_CONFIG.luckBonusPerLevel;
 
     // Owned gear that can still level up.
@@ -135,16 +161,20 @@ export class ChestSystem {
       return;
     }
 
+    const isEvolution = this.reward?.isEvolution;
+
     if (this.phase === 'burst') {
-      // A flash of light rays exploding outward.
+      // A flash of light rays exploding outward — bigger and purple
+      // when a weapon is evolving.
       const progress = this.timer / BURST_SECONDS;
+      const rayCount = isEvolution ? 20 : 12;
 
       ctx.save();
       ctx.globalAlpha = 1 - progress;
-      ctx.fillStyle = '#fff3c2';
-      for (let i = 0; i < 12; i++) {
-        const angle = (i / 12) * Math.PI * 2;
-        const length = 120 + progress * 700;
+      ctx.fillStyle = isEvolution ? '#d1b3ff' : '#fff3c2';
+      for (let i = 0; i < rayCount; i++) {
+        const angle = (i / rayCount) * Math.PI * 2;
+        const length = 120 + progress * (isEvolution ? 1100 : 700);
         ctx.save();
         ctx.translate(centerX, centerY);
         ctx.rotate(angle);
@@ -160,23 +190,36 @@ export class ChestSystem {
     // Reward phase.
     this.drawChest(ctx, centerX, centerY + 130, true);
 
-    drawPixelText(ctx, 'TREASURE!', centerX, 240, {
-      scale: 12,
-      color: GOLD,
-      shadeColor: GOLD_DARK,
-      outline: OUTLINE,
-      align: 'center',
-    });
+    if (isEvolution) {
+      // The big moment: pulsing purple headline.
+      const pulse = 1 + Math.sin(this.timer * 6) * 0.04;
+      drawPixelText(ctx, 'WEAPON EVOLVED!', centerX, 220, {
+        scale: Math.round(10 * pulse),
+        color: '#b388ff',
+        shadeColor: '#6a3ab2',
+        outline: OUTLINE,
+        align: 'center',
+      });
+    } else {
+      drawPixelText(ctx, 'TREASURE!', centerX, 240, {
+        scale: 12,
+        color: GOLD,
+        shadeColor: GOLD_DARK,
+        outline: OUTLINE,
+        align: 'center',
+      });
+    }
+
     drawPixelText(ctx, this.reward.title, centerX, 430, {
-      scale: 7,
-      color: '#e8ecf4',
-      shadeColor: '#9aa3b8',
+      scale: isEvolution ? 8 : 7,
+      color: isEvolution ? GOLD : '#e8ecf4',
+      shadeColor: isEvolution ? GOLD_DARK : '#9aa3b8',
       outline: OUTLINE,
       align: 'center',
     });
-    drawPixelText(ctx, this.reward.subtitle, centerX, 530, {
+    drawPixelText(ctx, this.reward.subtitle, centerX, 540, {
       scale: 5,
-      color: GOLD,
+      color: isEvolution ? '#d1b3ff' : GOLD,
       outline: OUTLINE,
       align: 'center',
     });

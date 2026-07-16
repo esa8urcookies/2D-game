@@ -10,10 +10,18 @@ import { EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 const PROJECTILE_RADIUS = 12;
 
-export class Projectile extends Entity {
-  constructor(x, y, directionX, directionY, { speed, damage, pierce = 0 }) {
-    super(x, y, PROJECTILE_RADIUS);
+// Visual styles, keyed by the weapon's `style` stat.
+const STYLES = {
+  default: { core: '#ffd54f', glow: 'rgba(255, 213, 79, 0.35)', radius: PROJECTILE_RADIUS },
+  arcane: { core: '#b388ff', glow: 'rgba(179, 136, 255, 0.45)', radius: 16 },
+};
 
+export class Projectile extends Entity {
+  constructor(x, y, directionX, directionY, { speed, damage, pierce = 0, style }) {
+    const look = STYLES[style] || STYLES.default;
+    super(x, y, look.radius);
+
+    this.look = look;
     this.velocityX = directionX * speed;
     this.velocityY = directionY * speed;
     this.damage = damage;
@@ -35,13 +43,13 @@ export class Projectile extends Entity {
     const screen = camera.worldToScreen(this.x, this.y);
 
     // Outer glow.
-    ctx.fillStyle = 'rgba(255, 213, 79, 0.35)';
+    ctx.fillStyle = this.look.glow;
     ctx.beginPath();
     ctx.arc(screen.x, screen.y, this.collisionRadius * 1.8, 0, Math.PI * 2);
     ctx.fill();
 
     // Core.
-    ctx.fillStyle = '#ffd54f';
+    ctx.fillStyle = this.look.core;
     ctx.beginPath();
     ctx.arc(screen.x, screen.y, this.collisionRadius, 0, Math.PI * 2);
     ctx.fill();

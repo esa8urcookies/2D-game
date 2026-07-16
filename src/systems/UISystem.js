@@ -138,16 +138,17 @@ export class UISystem {
 
     for (const weapon of game.weapons.owned) {
       const y = 92 + row * 42;
-      const label = weapon.isMaxLevel ? 'MAX' : `LV${weapon.level}`;
+      const evolved = weapon.def.evolved;
+      const label = evolved ? 'EVO' : weapon.isMaxLevel ? 'MAX' : `LV${weapon.level}`;
 
-      ctx.fillStyle = '#16161f';
+      ctx.fillStyle = evolved ? '#b388ff' : '#16161f';
       ctx.fillRect(24, y, 26, 26);
       ctx.fillStyle = weapon.def.color;
       ctx.fillRect(28, y + 4, 18, 18);
 
       drawPixelText(ctx, `${weapon.def.short} ${label}`, 64, y + 2, {
         scale: 3,
-        color: '#e8ecf4',
+        color: evolved ? '#ffd54f' : '#e8ecf4',
         outline: '#16161f',
       });
       row += 1;

@@ -5,10 +5,11 @@ import { drawPixelText } from '../assets/PixelFont.js';
 import { EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 export class FloatingText extends Entity {
-  constructor(text, x, y) {
+  constructor(text, x, y, color = '#ffd54f') {
     super(x, y, 0); // no collision
 
     this.text = String(text);
+    this.color = color;
     this.velocityY = -EFFECTS_CONFIG.damageText.riseSpeed;
     this.maxLife = EFFECTS_CONFIG.damageText.lifeSeconds;
     this.life = this.maxLife;
@@ -31,7 +32,7 @@ export class FloatingText extends Entity {
     ctx.globalAlpha = Math.min(1, this.life / (this.maxLife * 0.5));
     drawPixelText(ctx, this.text, screen.x, screen.y, {
       scale: 4,
-      color: '#ffd54f',
+      color: this.color,
       outline: '#16161f',
       align: 'center',
     });
