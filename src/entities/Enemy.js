@@ -27,6 +27,8 @@ export class Enemy extends Entity {
     this.health = this.maxHealth;
     this.contactDamage = type.contactDamage;
     this.scale = type.scale ?? 1;
+    this.isBoss = type.isBoss ?? false;
+    this.knockbackResistance = type.knockbackResistance ?? 1;
     this.sprite = getSprite(type.sprite);
     this.spriteSize = SPRITE_SIZE;
 
@@ -88,8 +90,11 @@ export class Enemy extends Entity {
   takeDamage(amount, dirX = 0, dirY = 0, knockbackForce = 0) {
     this.health -= amount;
     this.hitFlashTimer = ENEMY_CONFIG.hitFlashSeconds;
-    this.knockbackX += dirX * knockbackForce;
-    this.knockbackY += dirY * knockbackForce;
+
+    // Heavy enemies (bosses) barely budge.
+    const force = knockbackForce * this.knockbackResistance;
+    this.knockbackX += dirX * force;
+    this.knockbackY += dirY * force;
 
     if (this.health <= 0) {
       this.dead = true;

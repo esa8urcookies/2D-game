@@ -15,6 +15,8 @@ import { WeaponSystem } from '../systems/WeaponSystem.js';
 import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { MenuSystem } from '../systems/MenuSystem.js';
 import { UpgradeSystem } from '../systems/UpgradeSystem.js';
+import { ChestSystem } from '../systems/ChestSystem.js';
+import { Chest } from '../entities/Chest.js';
 import {
   GAME_WIDTH,
   GAME_HEIGHT,
@@ -40,8 +42,9 @@ export class Game {
     this.menu = new MenuSystem();
     this.collisions = new CollisionSystem();
     this.upgrades = new UpgradeSystem();
+    this.chestSystem = new ChestSystem();
 
-    // 'menu', 'playing', 'paused', 'levelup', 'gameover'
+    // 'menu', 'playing', 'paused', 'levelup', 'chest', 'gameover'
     this.state = 'menu';
 
     // startRun() fills everything in properly; calling it here gives
@@ -62,6 +65,8 @@ export class Game {
     this.projectiles = [];
     this.damageTexts = [];
     this.gems = [];
+    this.chests = [];
+    this.coins = 0;
     this.spawner = new Spawner();
     this.weapons = new WeaponSystem();
     this.weapons.addWeapon('arcaneBolt'); // the starting weapon
@@ -162,6 +167,11 @@ export class Game {
     }
   }
 
+  /** Called by a chest when the player touches it. */
+  openChest() {
+    this.chestSystem.open(this);
+  }
+
   /** Called by the UpgradeSystem after a card is picked. */
   onUpgradeChosen() {
     if (this.pendingLevelUps > 0) {
@@ -185,6 +195,8 @@ export class Game {
       }
     } else if (this.state === 'levelup') {
       this.upgrades.update(deltaTime, this);
+    } else if (this.state === 'chest') {
+      this.chestSystem.update(deltaTime, this);
     } else {
       // Title screen, pause menu, or game-over screen.
       this.menu.update(deltaTime, this);
@@ -210,6 +222,7 @@ export class Game {
     this.weapons.update(deltaTime, this);
     for (const projectile of this.projectiles) projectile.update(deltaTime, this);
     for (const gem of this.gems) gem.update(deltaTime, this);
+    for (const chest of this.chests) chest.update(deltaTime, this);
     for (const text of this.damageTexts) text.update(deltaTime, this);
 
     this.collisions.update(this);
@@ -246,6 +259,11 @@ export class Game {
         const type = ENEMY_TYPES[enemy.typeName];
         const tier = type.xpValue ? tierForValue(type.xpValue) : rollGemTier();
         this.gems.push(new XPGem(enemy.x, enemy.y, tier));
+
+        // Bosses leave a treasure chest behind.
+        if (type.dropsChest) {
+          this.chests.push(new Chest(enemy.x, enemy.y));
+        }
       } else {
         survivors.push(enemy);
       }
@@ -254,6 +272,7 @@ export class Game {
 
     this.projectiles = this.projectiles.filter((projectile) => !projectile.dead);
     this.gems = this.gems.filter((gem) => !gem.dead);
+    this.chests = this.chests.filter((chest) => !chest.dead);
     this.damageTexts = this.damageTexts.filter((text) => !text.dead);
   }
 
@@ -273,6 +292,8 @@ export class Game {
 
     if (this.state === 'levelup') {
       this.upgrades.render(this);
+    } else if (this.state === 'chest') {
+      this.chestSystem.render(this);
     } else if (this.state === 'paused' || this.state === 'gameover') {
       this.menu.render(this);
     }

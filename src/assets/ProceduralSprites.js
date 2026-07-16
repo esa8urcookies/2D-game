@@ -379,6 +379,88 @@ export function createEliteSprite() {
   return canvas;
 }
 
+/**
+ * Boss: a horned crimson devourer. Drawn at 182x182 like everything
+ * else, then scaled up 1.6x at render time so it towers over the mob.
+ */
+export function createBossSprite() {
+  const canvas = createSpriteCanvas();
+  const ctx = canvas.getContext('2d');
+  const center = SPRITE_SIZE / 2;
+
+  // Shadow.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  ctx.beginPath();
+  ctx.ellipse(center, 162, 66, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Horns first, so the head overlaps their bases.
+  ctx.fillStyle = '#3d1210';
+  ctx.strokeStyle = '#1d0605';
+  ctx.lineWidth = 5;
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(center + side * 34, 52);
+    ctx.quadraticCurveTo(center + side * 66, 30, center + side * 56, 4);
+    ctx.quadraticCurveTo(center + side * 74, 28, center + side * 56, 60);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  // Body: one big hulking round mass.
+  ctx.fillStyle = '#b71c1c';
+  ctx.strokeStyle = '#4a0b0b';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.ellipse(center, 104, 64, 58, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Belly shading.
+  ctx.fillStyle = '#8e1414';
+  ctx.beginPath();
+  ctx.ellipse(center, 132, 44, 24, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Furious glowing eyes under heavy brows.
+  ctx.fillStyle = '#ffe268';
+  ctx.beginPath();
+  ctx.arc(center - 26, 88, 11, 0, Math.PI * 2);
+  ctx.arc(center + 26, 88, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#4a0b0b';
+  ctx.beginPath();
+  ctx.arc(center - 24, 90, 4, 0, Math.PI * 2);
+  ctx.arc(center + 28, 90, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#4a0b0b';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.moveTo(center - 40, 72);
+  ctx.lineTo(center - 12, 80);
+  ctx.moveTo(center + 40, 72);
+  ctx.lineTo(center + 12, 80);
+  ctx.stroke();
+
+  // Gaping mouth with fangs.
+  ctx.fillStyle = '#2b0505';
+  ctx.beginPath();
+  ctx.ellipse(center, 122, 30, 16, 0, 0, Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#f3f6f0';
+  ctx.beginPath();
+  ctx.moveTo(center - 22, 122);
+  ctx.lineTo(center - 14, 136);
+  ctx.lineTo(center - 6, 122);
+  ctx.moveTo(center + 22, 122);
+  ctx.lineTo(center + 14, 136);
+  ctx.lineTo(center + 6, 122);
+  ctx.fill();
+
+  return canvas;
+}
+
 // Registered builders for the sprite cache above.
 const SPRITE_BUILDERS = {
   player: createPlayerSprite,
@@ -387,6 +469,7 @@ const SPRITE_BUILDERS = {
   crawler: createCrawlerSprite,
   brute: createBruteSprite,
   elite: createEliteSprite,
+  boss: createBossSprite,
 };
 
 /** Helper: rounded rectangle path. */

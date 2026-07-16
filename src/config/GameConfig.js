@@ -90,6 +90,19 @@ export const ENEMY_TYPES = {
     scale: 1.3, // visibly bigger than everything else
     xpValue: 10, // always drops a red gem
   },
+  boss: {
+    sprite: 'boss',
+    displayName: 'THE DEVOURER',
+    moveSpeed: 85, // slightly slower than a slime
+    maxHealth: 900,
+    collisionRadius: 90,
+    contactDamage: 30,
+    scale: 1.6, // towers over the horde
+    xpValue: 10,
+    isBoss: true, // gets the big health bar
+    dropsChest: true, // treasure on death
+    knockbackResistance: 0.15, // barely budges when hit
+  },
 };
 
 export const ENEMY_CONFIG = {
@@ -116,6 +129,8 @@ export const WEAPON_CONFIG = {
 export const WAVE_CONFIG = {
   maxEnemies: 250, // hard cap: spawning waits instead of exceeding it
 
+  bossEverySeconds: 120, // a boss arrives every two minutes
+
   // Enemies appear this far past the screen edge (min..max extra).
   spawnMarginMin: 100,
   spawnMarginMax: 300,
@@ -140,6 +155,21 @@ export const WAVE_CONFIG = {
   // half the final wave's interval over the next ten minutes.
   finalWaveSqueeze: 0.5,
   finalWaveSqueezeMinutes: 10,
+};
+
+// --- Treasure chests ----------------------------------------------------
+
+export const CHEST_CONFIG = {
+  pickupRadius: 70, // walk this close to open a chest
+  // Relative weights for what a chest contains.
+  weaponUpgradeWeight: 40,
+  passiveUpgradeWeight: 30,
+  coinWeight: 15,
+  healWeight: 15,
+  // Clover Coin: each luck level makes upgrades this much likelier.
+  luckBonusPerLevel: 8,
+  coinAmount: 50,
+  healAmount: 75,
 };
 
 // --- Feedback effects -------------------------------------------------

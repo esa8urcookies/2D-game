@@ -23,6 +23,7 @@ export class Spawner {
   constructor() {
     this.spawnTimer = 0;
     this.currentWaveIndex = -1; // no wave announced yet
+    this.nextBossTime = WAVE_CONFIG.bossEverySeconds;
 
     // Set when a new wave begins; the UI shows it while timer > 0.
     this.announcement = null;
@@ -59,6 +60,12 @@ export class Spawner {
       for (let i = 0; i < WAVE_CONFIG.waveBurstCount; i++) {
         this.spawnEnemy(game, (i / WAVE_CONFIG.waveBurstCount) * Math.PI * 2);
       }
+    }
+
+    // A boss every two minutes, regardless of the enemy cap.
+    if (game.survivalTime >= this.nextBossTime) {
+      this.nextBossTime += WAVE_CONFIG.bossEverySeconds;
+      this.spawnBoss(game);
     }
 
     // Regular spawning on the wave's interval.
@@ -101,6 +108,18 @@ export class Spawner {
         1 + minutes * WAVE_CONFIG.speedGrowthPerMinute
       ),
     };
+  }
+
+  spawnBoss(game) {
+    const angle = randomRange(0, Math.PI * 2);
+    const distance = OFF_SCREEN_DISTANCE + WAVE_CONFIG.spawnMarginMax;
+    const x = game.player.x + Math.cos(angle) * distance;
+    const y = game.player.y + Math.sin(angle) * distance;
+
+    game.enemies.push(new Enemy(x, y, 'boss', this.scalingAt(game.survivalTime)));
+
+    this.announcement = { title: 'WARNING!', subtitle: 'A BOSS APPROACHES' };
+    this.announcementTimer = 3;
   }
 
   /** Spawn one enemy off screen; a fixed angle makes ring bursts. */

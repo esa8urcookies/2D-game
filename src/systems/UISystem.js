@@ -2,7 +2,7 @@
 // the same pixel font as the menu so everything matches.
 // Everything is positioned in the internal 1920x1080 space.
 
-import { GAME_WIDTH, GAME_HEIGHT, XP_CONFIG } from '../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT, XP_CONFIG, ENEMY_TYPES } from '../config/GameConfig.js';
 import { PASSIVE_DEFS } from '../config/Passives.js';
 import { formatTime } from '../core/MathUtils.js';
 import { drawPixelText } from '../assets/PixelFont.js';
@@ -55,6 +55,13 @@ export class UISystem {
     });
 
     this.drawWaveInfo(ctx, game.spawner);
+    this.drawBossBar(ctx, game);
+
+    // Coin purse, under the kill counter.
+    drawPixelText(ctx, `COINS ${game.coins}`, GAME_WIDTH - 340, 84, {
+      scale: 3,
+      color: 'rgba(255, 213, 79, 0.75)',
+    });
 
     // Debug info, bottom left (small, quiet), above the XP bar.
     ctx.save();
@@ -64,6 +71,24 @@ export class UISystem {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.fillText(`FPS: ${this.fps}  Enemies: ${game.enemies.length}`, 24, GAME_HEIGHT - 100);
     ctx.restore();
+  }
+
+  /** A large centered health bar while any boss is alive. */
+  drawBossBar(ctx, game) {
+    const boss = game.enemies.find((enemy) => enemy.isBoss && !enemy.dead);
+    if (!boss) return;
+
+    const name = ENEMY_TYPES[boss.typeName].displayName || 'BOSS';
+    const width = 720;
+    const x = (GAME_WIDTH - width) / 2;
+
+    drawPixelText(ctx, name, GAME_WIDTH / 2, 128, {
+      scale: 4,
+      color: '#e04040',
+      outline: '#16161f',
+      align: 'center',
+    });
+    drawBar(ctx, x, 168, width, 26, boss.health / boss.maxHealth, '#e04040', 4);
   }
 
   /**
