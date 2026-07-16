@@ -7,7 +7,7 @@ import { Input } from './Input.js';
 import { Camera } from './Camera.js';
 import { Player } from '../entities/Player.js';
 import { FloatingText } from '../entities/FloatingText.js';
-import { XPGem, rollGemTier } from '../entities/XPGem.js';
+import { XPGem, rollGemTier, tierForValue } from '../entities/XPGem.js';
 import { Renderer } from '../systems/Renderer.js';
 import { UISystem } from '../systems/UISystem.js';
 import { Spawner } from '../systems/Spawner.js';
@@ -20,6 +20,7 @@ import {
   GAME_HEIGHT,
   PLAYER_CONFIG,
   XP_CONFIG,
+  ENEMY_TYPES,
 } from '../config/GameConfig.js';
 
 // If the browser tab lags or is backgrounded, a single frame could
@@ -240,7 +241,11 @@ export class Game {
     for (const enemy of this.enemies) {
       if (enemy.dead) {
         this.killCount += 1;
-        this.gems.push(new XPGem(enemy.x, enemy.y, rollGemTier()));
+
+        // Big enemies guarantee a big gem; the rest roll for one.
+        const type = ENEMY_TYPES[enemy.typeName];
+        const tier = type.xpValue ? tierForValue(type.xpValue) : rollGemTier();
+        this.gems.push(new XPGem(enemy.x, enemy.y, tier));
       } else {
         survivors.push(enemy);
       }

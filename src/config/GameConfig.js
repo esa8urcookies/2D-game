@@ -49,6 +49,8 @@ export const XP_CONFIG = {
 
 // Each entry fully describes one enemy type. Adding a new monster is
 // one new entry here plus a sprite in ProceduralSprites.js.
+//   scale    draws the sprite bigger (collision radius is separate)
+//   xpValue  guaranteed gem value on death (otherwise random roll)
 export const ENEMY_TYPES = {
   slime: {
     sprite: 'slime',
@@ -63,6 +65,30 @@ export const ENEMY_TYPES = {
     maxHealth: 10, // ...but dies quickly
     collisionRadius: 40,
     contactDamage: 7,
+  },
+  crawler: {
+    sprite: 'crawler',
+    moveSpeed: 170, // middle of the pack...
+    maxHealth: 25,
+    collisionRadius: 42, // ...and slightly harder to hit
+    contactDamage: 10,
+  },
+  brute: {
+    sprite: 'brute',
+    moveSpeed: 70, // a slow wall...
+    maxHealth: 120, // ...that soaks up damage
+    collisionRadius: 60,
+    contactDamage: 20,
+    xpValue: 5, // always drops a green gem
+  },
+  elite: {
+    sprite: 'elite',
+    moveSpeed: 90,
+    maxHealth: 400, // a mini-boss
+    collisionRadius: 72,
+    contactDamage: 25,
+    scale: 1.3, // visibly bigger than everything else
+    xpValue: 10, // always drops a red gem
   },
 };
 
@@ -82,19 +108,38 @@ export const WEAPON_CONFIG = {
   knockbackForce: 420, // how hard projectile hits shove enemies back
 };
 
-// --- Enemy spawning ---------------------------------------------------
+// --- Enemy waves --------------------------------------------------------
 
-export const SPAWN_CONFIG = {
-  startInterval: 1.4, // seconds between spawns at time 0
-  minInterval: 0.35, // fastest spawn rate
-  rampDuration: 120, // seconds to go from start to fastest
-  maxEnemies: 200, // safety cap so the game stays smooth
+// The wave director reads this table against the survival timer.
+// Each wave sets the spawn interval and the mix of enemy types
+// (weights don't need to add up to 1 — they're relative).
+export const WAVE_CONFIG = {
+  maxEnemies: 250, // hard cap: spawning waits instead of exceeding it
+
   // Enemies appear this far past the screen edge (min..max extra).
   spawnMarginMin: 100,
   spawnMarginMax: 300,
-  batStartTime: 15, // seconds before bats can appear
-  batRampDuration: 90, // seconds for bats to reach their max share
-  batMaxChance: 0.45,
+
+  // How many enemies pour in from all directions when a wave starts.
+  waveBurstCount: 6,
+
+  waves: [
+    { startTime: 0, name: 'THE FIRST SLIMES', interval: 1.4, types: { slime: 1 } },
+    { startTime: 60, name: 'WINGS IN THE DARK', interval: 1.0, types: { slime: 0.7, bat: 0.3 } },
+    { startTime: 120, name: 'THE CRAWLERS COME', interval: 0.8, types: { slime: 0.45, bat: 0.25, crawler: 0.3 } },
+    { startTime: 180, name: 'THE SWARM GROWS', interval: 0.5, types: { slime: 0.4, bat: 0.3, crawler: 0.3 } },
+    { startTime: 240, name: 'HEAVY FOOTSTEPS', interval: 0.45, types: { slime: 0.3, bat: 0.25, crawler: 0.25, brute: 0.18, elite: 0.02 } },
+    { startTime: 300, name: 'ENDLESS NIGHT', interval: 0.4, types: { slime: 0.25, bat: 0.25, crawler: 0.25, brute: 0.2, elite: 0.05 } },
+  ],
+
+  // Continuous scaling so time always hurts:
+  healthGrowthPerMinute: 0.15, // enemies gain +15% max HP per minute
+  speedGrowthPerMinute: 0.04, // and +4% speed per minute...
+  maxSpeedMultiplier: 1.5, // ...up to +50%
+  // After the final wave the spawn interval keeps shrinking, down to
+  // half the final wave's interval over the next ten minutes.
+  finalWaveSqueeze: 0.5,
+  finalWaveSqueezeMinutes: 10,
 };
 
 // --- Feedback effects -------------------------------------------------

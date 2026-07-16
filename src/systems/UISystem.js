@@ -54,6 +54,8 @@ export class UISystem {
       outline: '#16161f',
     });
 
+    this.drawWaveInfo(ctx, game.spawner);
+
     // Debug info, bottom left (small, quiet), above the XP bar.
     ctx.save();
     ctx.textBaseline = 'top';
@@ -62,6 +64,43 @@ export class UISystem {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.fillText(`FPS: ${this.fps}  Enemies: ${game.enemies.length}`, 24, GAME_HEIGHT - 100);
     ctx.restore();
+  }
+
+  /**
+   * The small always-on wave label under the timer, plus the big
+   * announcement banner for a few seconds when a new wave begins.
+   */
+  drawWaveInfo(ctx, spawner) {
+    if (spawner.currentWaveIndex < 0) return;
+
+    // Small persistent label.
+    drawPixelText(ctx, `WAVE ${spawner.currentWaveIndex + 1}`, GAME_WIDTH / 2, 96, {
+      scale: 3,
+      color: 'rgba(232, 236, 244, 0.65)',
+      align: 'center',
+    });
+
+    // Announcement banner, fading out over its last second.
+    if (spawner.announcementTimer > 0 && spawner.announcement) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, spawner.announcementTimer);
+
+      drawPixelText(ctx, spawner.announcement.title, GAME_WIDTH / 2, 200, {
+        scale: 10,
+        color: '#e04040',
+        shadeColor: '#7e2020',
+        outline: '#16161f',
+        align: 'center',
+      });
+      drawPixelText(ctx, spawner.announcement.subtitle, GAME_WIDTH / 2, 300, {
+        scale: 4,
+        color: '#e8ecf4',
+        outline: '#16161f',
+        align: 'center',
+      });
+
+      ctx.restore();
+    }
   }
 
   /**

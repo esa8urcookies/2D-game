@@ -176,11 +176,217 @@ export function createBatSprite() {
   return canvas;
 }
 
+/**
+ * Crawler: a low, wide teal beetle scuttling on six legs.
+ * Medium speed, slightly smaller hitbox — annoying to hit.
+ */
+export function createCrawlerSprite() {
+  const canvas = createSpriteCanvas();
+  const ctx = canvas.getContext('2d');
+  const center = SPRITE_SIZE / 2;
+
+  // Shadow.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(center, 150, 62, 13, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Legs: three per side, splayed outward.
+  ctx.strokeStyle = '#0e5048';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < 3; i++) {
+      const y = 108 + i * 16;
+      ctx.moveTo(center + side * 40, y);
+      ctx.lineTo(center + side * 70, y + 22);
+    }
+  }
+  ctx.stroke();
+
+  // Body: a wide oval shell.
+  ctx.fillStyle = '#26a69a';
+  ctx.strokeStyle = '#0e5048';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.ellipse(center, 118, 52, 34, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Shell stripe.
+  ctx.strokeStyle = '#0e5048';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(center, 86);
+  ctx.lineTo(center, 150);
+  ctx.stroke();
+
+  // Eyes at the front edge.
+  ctx.fillStyle = '#ffe268';
+  ctx.beginPath();
+  ctx.arc(center - 18, 132, 7, 0, Math.PI * 2);
+  ctx.arc(center + 18, 132, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  return canvas;
+}
+
+/**
+ * Brute: a slow slab of angry rock with heavy fists.
+ * High health — a walking wall.
+ */
+export function createBruteSprite() {
+  const canvas = createSpriteCanvas();
+  const ctx = canvas.getContext('2d');
+  const center = SPRITE_SIZE / 2;
+
+  // Shadow.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(center, 158, 60, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#8d6e63';
+  ctx.strokeStyle = '#3e2c26';
+  ctx.lineWidth = 6;
+
+  // Body: a broad slab, wider at the shoulders.
+  ctx.beginPath();
+  ctx.moveTo(center - 56, 60);
+  ctx.lineTo(center + 56, 60);
+  ctx.lineTo(center + 46, 152);
+  ctx.lineTo(center - 46, 152);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Cracks in the rock.
+  ctx.strokeStyle = '#3e2c26';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(center - 20, 96);
+  ctx.lineTo(center - 6, 112);
+  ctx.lineTo(center - 16, 128);
+  ctx.moveTo(center + 28, 74);
+  ctx.lineTo(center + 20, 92);
+  ctx.stroke();
+
+  // Fists hanging low at the sides.
+  ctx.fillStyle = '#6d4c41';
+  ctx.strokeStyle = '#3e2c26';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(center - 58, 136, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(center + 58, 136, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Deep-set glowing eyes under a heavy brow.
+  ctx.fillStyle = '#3e2c26';
+  ctx.fillRect(center - 32, 70, 26, 20);
+  ctx.fillRect(center + 6, 70, 26, 20);
+  ctx.fillStyle = '#ff7043';
+  ctx.fillRect(center - 27, 76, 16, 10);
+  ctx.fillRect(center + 11, 76, 16, 10);
+
+  // Grim mouth with teeth.
+  ctx.fillStyle = '#3e2c26';
+  ctx.fillRect(center - 20, 104, 40, 12);
+  ctx.fillStyle = '#d7ccc8';
+  ctx.fillRect(center - 14, 104, 8, 6);
+  ctx.fillRect(center + 6, 104, 8, 6);
+
+  return canvas;
+}
+
+/**
+ * Elite: a towering crowned slime — a rare mini-boss.
+ * Drawn like the slime but taller, purple, and wearing a gold crown.
+ */
+export function createEliteSprite() {
+  const canvas = createSpriteCanvas();
+  const ctx = canvas.getContext('2d');
+  const center = SPRITE_SIZE / 2;
+
+  // Shadow.
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.beginPath();
+  ctx.ellipse(center, 160, 64, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Body: a tall dome.
+  ctx.fillStyle = '#ab47bc';
+  ctx.strokeStyle = '#5e2069';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(center - 66, 152);
+  ctx.quadraticCurveTo(center - 76, 40, center, 32);
+  ctx.quadraticCurveTo(center + 76, 40, center + 66, 152);
+  ctx.quadraticCurveTo(center, 166, center - 66, 152);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Glossy highlight.
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+  ctx.beginPath();
+  ctx.ellipse(center - 26, 68, 18, 11, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Crown.
+  ctx.fillStyle = '#ffd54f';
+  ctx.strokeStyle = '#a06e12';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(center - 34, 40);
+  ctx.lineTo(center - 34, 14);
+  ctx.lineTo(center - 17, 30);
+  ctx.lineTo(center, 10);
+  ctx.lineTo(center + 17, 30);
+  ctx.lineTo(center + 34, 14);
+  ctx.lineTo(center + 34, 40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Menacing eyes.
+  ctx.fillStyle = '#2d0f33';
+  ctx.beginPath();
+  ctx.arc(center - 24, 104, 11, 0, Math.PI * 2);
+  ctx.arc(center + 24, 104, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Angry brows.
+  ctx.strokeStyle = '#2d0f33';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(center - 36, 88);
+  ctx.lineTo(center - 12, 96);
+  ctx.moveTo(center + 36, 88);
+  ctx.lineTo(center + 12, 96);
+  ctx.stroke();
+
+  // Grin.
+  ctx.strokeStyle = '#2d0f33';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(center, 122, 18, 0.2, Math.PI - 0.2);
+  ctx.stroke();
+
+  return canvas;
+}
+
 // Registered builders for the sprite cache above.
 const SPRITE_BUILDERS = {
   player: createPlayerSprite,
   slime: createSlimeSprite,
   bat: createBatSprite,
+  crawler: createCrawlerSprite,
+  brute: createBruteSprite,
+  elite: createEliteSprite,
 };
 
 /** Helper: rounded rectangle path. */

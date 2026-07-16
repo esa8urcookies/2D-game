@@ -10,15 +10,23 @@ import { drawCenteredSprite, drawBar } from '../core/DrawUtils.js';
 import { ENEMY_TYPES, ENEMY_CONFIG, SPRITE_SIZE } from '../config/GameConfig.js';
 
 export class Enemy extends Entity {
-  constructor(x, y, typeName) {
+  /**
+   * `scaling` comes from the wave director: the longer the run, the
+   * tougher and faster new enemies spawn.
+   */
+  constructor(x, y, typeName, scaling = {}) {
     const type = ENEMY_TYPES[typeName];
     super(x, y, type.collisionRadius);
 
+    const healthMultiplier = scaling.healthMultiplier ?? 1;
+    const speedMultiplier = scaling.speedMultiplier ?? 1;
+
     this.typeName = typeName;
-    this.moveSpeed = type.moveSpeed;
-    this.maxHealth = type.maxHealth;
-    this.health = type.maxHealth;
+    this.moveSpeed = type.moveSpeed * speedMultiplier;
+    this.maxHealth = Math.round(type.maxHealth * healthMultiplier);
+    this.health = this.maxHealth;
     this.contactDamage = type.contactDamage;
+    this.scale = type.scale ?? 1;
     this.sprite = getSprite(type.sprite);
     this.spriteSize = SPRITE_SIZE;
 
@@ -65,12 +73,14 @@ export class Enemy extends Entity {
     drawCenteredSprite(ctx, this.sprite, screen.x, screen.y + (isBat ? wobble * 10 : 0), {
       flipX: this.facing < 0,
       scaleY: isBat ? 1 : 1 + wobble * 0.05,
+      scale: this.scale,
       brighten: this.hitFlashTimer > 0,
     });
 
     // Health bar, only once the enemy has actually been hurt.
     if (this.health < this.maxHealth) {
-      drawBar(ctx, screen.x - 45, screen.y - 80, 90, 10, this.health / this.maxHealth, '#e04040');
+      const barY = screen.y - 80 * this.scale;
+      drawBar(ctx, screen.x - 45, barY, 90, 10, this.health / this.maxHealth, '#e04040');
     }
   }
 

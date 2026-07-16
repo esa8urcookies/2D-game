@@ -69,6 +69,14 @@ function buildGemSprite(tier) {
   return canvas;
 }
 
+/** The gem tier matching an exact value (for guaranteed drops). */
+export function tierForValue(value) {
+  return (
+    XP_CONFIG.gemTiers.find((tier) => tier.value === value) ||
+    XP_CONFIG.gemTiers[XP_CONFIG.gemTiers.length - 1]
+  );
+}
+
 /** Roll which gem tier an enemy drops (rare tiers checked first). */
 export function rollGemTier() {
   const roll = Math.random();

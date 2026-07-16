@@ -7,17 +7,18 @@
  * Options:
  *   flipX    mirror horizontally (facing left)
  *   scaleY   vertical squash/stretch (slime wobble)
+ *   scale    overall size multiplier (elites are drawn bigger)
  *   alpha    transparency (blinking)
  *   brighten white-out flash (taking damage)
  */
 export function drawCenteredSprite(ctx, image, x, y, options = {}) {
-  const { flipX = false, scaleY = 1, alpha = 1, brighten = false } = options;
+  const { flipX = false, scaleY = 1, scale = 1, alpha = 1, brighten = false } = options;
   const halfW = image.width / 2;
   const halfH = image.height / 2;
 
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(flipX ? -1 : 1, scaleY);
+  ctx.scale((flipX ? -1 : 1) * scale, scaleY * scale);
   if (alpha !== 1) ctx.globalAlpha = alpha;
   if (brighten) ctx.filter = 'brightness(2.5) saturate(0.3)';
   ctx.drawImage(image, -halfW, -halfH);
