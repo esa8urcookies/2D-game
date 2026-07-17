@@ -45,6 +45,10 @@ function px(ctx, x, y, w, h, color) {
  * mid-stride; arms swing the opposite way.
  */
 function drawDown(ctx, step) {
+  // Plume feather on the helmet crest.
+  px(ctx, 12, 1, 2, 2, RED);
+  px(ctx, 13, 0, 1, 1, RED_DARK);
+
   // Helmet.
   px(ctx, 10, 3, 6, 1, STEEL_MID);
   px(ctx, 9, 4, 8, 3, STEEL_LIGHT);
@@ -62,9 +66,11 @@ function drawDown(ctx, step) {
   px(ctx, 9, 16, 8, 1, RED_DARK); // belt
   px(ctx, 12, 16, 2, 1, RED); // buckle
 
-  // Pauldrons.
+  // Pauldrons with gold studs.
   px(ctx, 7, 11, 2, 2, STEEL_DARK);
   px(ctx, 17, 11, 2, 2, STEEL_DARK);
+  px(ctx, 7, 11, 1, 1, '#ffd54f');
+  px(ctx, 18, 11, 1, 1, '#ffd54f');
 
   // Arms swing opposite to the legs. Darker than the torso so they
   // read as separate shapes instead of one wide slab.
@@ -85,6 +91,9 @@ function drawDown(ctx, step) {
 
 /** Facing away from the camera: helmet back and a red cape. */
 function drawUp(ctx, step) {
+  // Plume feather, seen from behind.
+  px(ctx, 12, 1, 2, 2, RED);
+
   // Helmet (no face from behind).
   px(ctx, 10, 3, 6, 1, STEEL_MID);
   px(ctx, 9, 4, 8, 4, STEEL_LIGHT);
@@ -118,6 +127,15 @@ function drawUp(ctx, step) {
  * this drawing mirrored, so it only exists once.
  */
 function drawSide(ctx, step) {
+  // Plume trailing off the back of the helmet.
+  px(ctx, 10, 1, 2, 2, RED);
+  px(ctx, 9, 2, 1, 1, RED_DARK);
+
+  // Cape hanging behind the body (this view faces right, so the
+  // cape is on the left), its hem swinging opposite the stride.
+  px(ctx, 8, 11, 2, 5, RED);
+  px(ctx, 8 - step, 16, 2, 2, RED_DARK);
+
   // Helmet profile with nose guard.
   px(ctx, 10, 3, 6, 1, STEEL_MID);
   px(ctx, 9, 4, 8, 3, STEEL_LIGHT);

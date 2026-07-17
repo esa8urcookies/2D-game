@@ -61,6 +61,7 @@ export const ENEMY_TYPES = {
   },
   bat: {
     sprite: 'bat',
+    spriteB: 'batB', // second frame: wings raised (flap animation)
     moveSpeed: 250, // fast...
     maxHealth: 10, // ...but dies quickly
     collisionRadius: 40,
@@ -68,6 +69,7 @@ export const ENEMY_TYPES = {
   },
   crawler: {
     sprite: 'crawler',
+    spriteB: 'crawlerB', // second frame: alternate leg pose
     moveSpeed: 170, // middle of the pack...
     maxHealth: 25,
     collisionRadius: 42, // ...and slightly harder to hit

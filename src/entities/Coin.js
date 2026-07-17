@@ -87,6 +87,14 @@ export class Coin extends Entity {
     const screen = camera.worldToScreen(this.x, this.y);
     const bob = Math.sin(this.bobPhase * 3) * 4;
     const half = this.sprite.width / 2;
-    ctx.drawImage(this.sprite, screen.x - half, screen.y - half + bob);
+
+    // Spin: the coin narrows and widens like it's turning in place.
+    const spin = Math.abs(Math.cos(this.bobPhase * 4));
+
+    ctx.save();
+    ctx.translate(screen.x, screen.y + bob);
+    ctx.scale(Math.max(0.2, spin), 1);
+    ctx.drawImage(this.sprite, -half, -half);
+    ctx.restore();
   }
 }

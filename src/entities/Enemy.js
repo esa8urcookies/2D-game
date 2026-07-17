@@ -30,6 +30,8 @@ export class Enemy extends Entity {
     this.isBoss = type.isBoss ?? false;
     this.knockbackResistance = type.knockbackResistance ?? 1;
     this.sprite = getSprite(type.sprite);
+    // Optional second animation frame (wing flap, leg scuttle).
+    this.spriteB = type.spriteB ? getSprite(type.spriteB) : null;
     this.spriteSize = SPRITE_SIZE;
 
     // Velocity from being hit; fades out via friction.
@@ -68,11 +70,15 @@ export class Enemy extends Entity {
     const screen = camera.worldToScreen(this.x, this.y);
 
     // A gentle idle cycle makes the horde feel alive: bats bob up
-    // and down, everything else squishes.
+    // and down, everything else squishes. Types with a second frame
+    // also alternate poses (wing flap, leg scuttle).
     const wobble = Math.sin(this.animationTimer * 6);
     const isBat = this.typeName === 'bat';
+    const frame = this.spriteB && Math.sin(this.animationTimer * 11) > 0
+      ? this.spriteB
+      : this.sprite;
 
-    drawCenteredSprite(ctx, this.sprite, screen.x, screen.y + (isBat ? wobble * 10 : 0), {
+    drawCenteredSprite(ctx, frame, screen.x, screen.y + (isBat ? wobble * 10 : 0), {
       flipX: this.facing < 0,
       scaleY: isBat ? 1 : 1 + wobble * 0.05,
       scale: this.scale,

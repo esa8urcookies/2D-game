@@ -92,10 +92,19 @@ export function createSlimeSprite() {
   ctx.fill();
   ctx.stroke();
 
-  // Glossy highlight.
+  // Darker base where the body meets the ground.
+  ctx.fillStyle = 'rgba(27, 58, 29, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(center, 146, 56, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glossy highlight, plus a small second glint.
   ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
   ctx.beginPath();
   ctx.ellipse(center - 24, 82, 16, 10, -0.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(center + 30, 72, 6, 4, 0.4, 0, Math.PI * 2);
   ctx.fill();
 
   // Eyes.
@@ -117,36 +126,42 @@ export function createSlimeSprite() {
 
 /**
  * Bat: a small dark flyer with pointed wings.
- * Fast but fragile.
+ * Fast but fragile. Two poses (wings down / wings raised) make a
+ * real flap; the Enemy picks a pose from its animation timer.
  */
-export function createBatSprite() {
+export function createBatSprite(raised = false) {
   const canvas = createSpriteCanvas();
   const ctx = canvas.getContext('2d');
   const center = SPRITE_SIZE / 2;
+
+  // Raised wings pivot up and inward.
+  const tipY = raised ? 56 : 92;
+  const curlY = raised ? 34 : 50;
+  const sagY = raised ? 78 : 104;
 
   ctx.fillStyle = '#7e57c2';
   ctx.strokeStyle = '#4527a0';
   ctx.lineWidth = 6;
 
-  // Left wing.
-  ctx.beginPath();
-  ctx.moveTo(center - 18, 90);
-  ctx.quadraticCurveTo(center - 70, 50, center - 84, 92);
-  ctx.quadraticCurveTo(center - 62, 88, center - 54, 104);
-  ctx.quadraticCurveTo(center - 40, 96, center - 18, 108);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  for (const side of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(center + side * 18, 90);
+    ctx.quadraticCurveTo(center + side * 70, curlY, center + side * 84, tipY);
+    ctx.quadraticCurveTo(center + side * 62, tipY - 4, center + side * 54, sagY);
+    ctx.quadraticCurveTo(center + side * 40, sagY - 8, center + side * 18, 108);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
 
-  // Right wing (mirror of the left).
-  ctx.beginPath();
-  ctx.moveTo(center + 18, 90);
-  ctx.quadraticCurveTo(center + 70, 50, center + 84, 92);
-  ctx.quadraticCurveTo(center + 62, 88, center + 54, 104);
-  ctx.quadraticCurveTo(center + 40, 96, center + 18, 108);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+    // Wing membrane rib.
+    ctx.strokeStyle = '#4527a0';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(center + side * 22, 94);
+    ctx.quadraticCurveTo(center + side * 52, (curlY + tipY) / 2 + 8, center + side * 74, tipY + 6);
+    ctx.stroke();
+    ctx.lineWidth = 6;
+  }
 
   // Body.
   ctx.fillStyle = '#5e35b1';
@@ -179,8 +194,9 @@ export function createBatSprite() {
 /**
  * Crawler: a low, wide teal beetle scuttling on six legs.
  * Medium speed, slightly smaller hitbox — annoying to hit.
+ * Two leg poses (alternating tripods) make it visibly scuttle.
  */
-export function createCrawlerSprite() {
+export function createCrawlerSprite(step = false) {
   const canvas = createSpriteCanvas();
   const ctx = canvas.getContext('2d');
   const center = SPRITE_SIZE / 2;
@@ -191,15 +207,19 @@ export function createCrawlerSprite() {
   ctx.ellipse(center, 150, 62, 13, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Legs: three per side, splayed outward.
+  // Legs: three per side. Alternate legs reach forward or trail
+  // back depending on the pose, like a real insect's tripod gait.
   ctx.strokeStyle = '#0e5048';
   ctx.lineWidth = 8;
   ctx.beginPath();
   for (const side of [-1, 1]) {
     for (let i = 0; i < 3; i++) {
       const y = 108 + i * 16;
+      // Which legs reach depends on pose + leg index + body side.
+      const reaching = (i % 2 === 0) === (side > 0) ? step : !step;
+      const stretch = reaching ? 14 : -6;
       ctx.moveTo(center + side * 40, y);
-      ctx.lineTo(center + side * 70, y + 22);
+      ctx.lineTo(center + side * (70 + stretch), y + 22 - (reaching ? 6 : 0));
     }
   }
   ctx.stroke();
@@ -461,12 +481,15 @@ export function createBossSprite() {
   return canvas;
 }
 
-// Registered builders for the sprite cache above.
+// Registered builders for the sprite cache above. The "B" entries
+// are second animation frames (wing flap, leg scuttle).
 const SPRITE_BUILDERS = {
   player: createPlayerSprite,
   slime: createSlimeSprite,
-  bat: createBatSprite,
-  crawler: createCrawlerSprite,
+  bat: () => createBatSprite(false),
+  batB: () => createBatSprite(true),
+  crawler: () => createCrawlerSprite(false),
+  crawlerB: () => createCrawlerSprite(true),
   brute: createBruteSprite,
   elite: createEliteSprite,
   boss: createBossSprite,
