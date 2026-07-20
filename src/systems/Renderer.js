@@ -27,6 +27,7 @@ export class Renderer {
     // the player, weapon effects, projectiles, and damage numbers.
     this.drawAll(game.gems, game.camera);
     this.drawAll(game.coinPickups, game.camera);
+    this.drawAll(game.potions, game.camera);
     this.drawAll(game.chests, game.camera);
     this.drawAll(game.enemies, game.camera);
     game.player.render(this.ctx, game.camera);

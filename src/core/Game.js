@@ -19,6 +19,7 @@ import { ChestSystem } from '../systems/ChestSystem.js';
 import { ParticleSystem } from '../systems/ParticleSystem.js';
 import { Chest } from '../entities/Chest.js';
 import { Coin } from '../entities/Coin.js';
+import { Potion } from '../entities/Potion.js';
 import { loadSave, persistSave } from './SaveData.js';
 import { audio } from './Audio.js';
 import { drawPixelText } from '../assets/PixelFont.js';
@@ -30,6 +31,7 @@ import {
   XP_CONFIG,
   ENEMY_TYPES,
   COIN_CONFIG,
+  POTION_CONFIG,
   EFFECTS_CONFIG,
 } from '../config/GameConfig.js';
 
@@ -82,6 +84,7 @@ export class Game {
     this.gems = [];
     this.chests = [];
     this.coinPickups = [];
+    this.potions = [];
     this.coins = 0; // coins earned THIS run; banked on death
     this.particles.clear();
     this.spawner = new Spawner();
@@ -289,6 +292,7 @@ export class Game {
     for (const projectile of this.projectiles) projectile.update(deltaTime, this);
     for (const gem of this.gems) gem.update(deltaTime, this);
     for (const coin of this.coinPickups) coin.update(deltaTime, this);
+    for (const potion of this.potions) potion.update(deltaTime, this);
     for (const chest of this.chests) chest.update(deltaTime, this);
     for (const text of this.damageTexts) text.update(deltaTime, this);
     this.particles.update(deltaTime);
@@ -366,9 +370,11 @@ export class Game {
         this.gems.push(new XPGem(enemy.x, enemy.y, tier));
 
         // Bosses leave a treasure chest behind; normal enemies have
-        // a small chance to drop a coin.
+        // a small chance to drop a coin or a health potion.
         if (type.dropsChest) {
           this.chests.push(new Chest(enemy.x, enemy.y));
+        } else if (Math.random() < POTION_CONFIG.dropChance) {
+          this.potions.push(new Potion(enemy.x, enemy.y));
         } else if (Math.random() < COIN_CONFIG.dropChance) {
           this.coinPickups.push(new Coin(enemy.x, enemy.y));
         }
@@ -381,6 +387,7 @@ export class Game {
     this.projectiles = this.projectiles.filter((projectile) => !projectile.dead);
     this.gems = this.gems.filter((gem) => !gem.dead);
     this.coinPickups = this.coinPickups.filter((coin) => !coin.dead);
+    this.potions = this.potions.filter((potion) => !potion.dead);
     this.chests = this.chests.filter((chest) => !chest.dead);
     this.damageTexts = this.damageTexts.filter((text) => !text.dead);
   }

@@ -172,6 +172,14 @@ export const COIN_CONFIG = {
   value: 1,
 };
 
+// --- Health potions -------------------------------------------------------
+
+export const POTION_CONFIG = {
+  dropChance: 0.03, // chance a normal enemy drops a potion
+  healAmount: 30,
+  pickupRadius: 72, // walk this close to drink it (not magnetized)
+};
+
 // --- Treasure chests ----------------------------------------------------
 
 export const CHEST_CONFIG = {

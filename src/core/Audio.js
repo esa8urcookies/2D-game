@@ -215,6 +215,13 @@ const SOUNDS = {
       );
     },
   },
+  heal: {
+    play: (a) => {
+      // A gentle two-note rising chime.
+      a.tone({ type: 'sine', freq: 660, duration: 0.14, gain: 0.16 });
+      a.tone({ type: 'sine', freq: 990, duration: 0.2, gain: 0.14, delay: 0.09 });
+    },
+  },
   playerDamage: {
     throttle: 120,
     play: (a) => {
