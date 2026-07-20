@@ -14,10 +14,10 @@
 
 export const WEAPON_DEFS = {
   arcaneBolt: {
-    name: 'ARCANE BOLT',
-    short: 'BOLT',
+    name: 'EMBERSHOT',
+    short: 'EMBER',
     color: '#ffd54f',
-    description: 'SHOOTS NEAREST FOE',
+    description: 'HURLS EMBERS AT THE NEAREST FOE',
     maxLevel: 8,
     evolvesInto: 'arcaneStorm',
     evolutionRequires: 'spellbook',
@@ -34,10 +34,10 @@ export const WEAPON_DEFS = {
   },
 
   orbitingBlade: {
-    name: 'ORBITING BLADE',
-    short: 'BLADE',
+    name: 'WARDBLADES',
+    short: 'WARD',
     color: '#c6cdd8',
-    description: 'BLADES ORBIT YOU',
+    description: 'BLADES OF LIGHT ORBIT YOU',
     maxLevel: 8,
     evolvesInto: 'celestialBlades',
     evolutionRequires: 'powerStone',
@@ -54,10 +54,10 @@ export const WEAPON_DEFS = {
   },
 
   holyPulse: {
-    name: 'HOLY PULSE',
-    short: 'PULSE',
+    name: 'SUNBURST',
+    short: 'BURST',
     color: '#fff3c2',
-    description: 'DAMAGES ALL NEARBY',
+    description: 'A BLAST OF LIGHT ALL AROUND',
     maxLevel: 8,
     evolvesInto: 'divineNova',
     evolutionRequires: 'ironHeart',
@@ -74,10 +74,10 @@ export const WEAPON_DEFS = {
   },
 
   lightningMark: {
-    name: 'LIGHTNING MARK',
-    short: 'SPARK',
+    name: 'STARFALL',
+    short: 'FALL',
     color: '#9be7ff',
-    description: 'ZAPS RANDOM FOES',
+    description: 'STARS STRIKE RANDOM FOES',
     maxLevel: 8,
     evolvesInto: 'thunderCrown',
     evolutionRequires: 'cloverCoin',
@@ -97,10 +97,10 @@ export const WEAPON_DEFS = {
   // Single-level weapons that replace their base form via a chest.
 
   arcaneStorm: {
-    name: 'ARCANE STORM',
-    short: 'STORM',
+    name: 'CINDERSTORM',
+    short: 'CINDER',
     color: '#b388ff',
-    description: 'A TEMPEST OF BOLTS',
+    description: 'A TEMPEST OF EMBERS',
     maxLevel: 1,
     evolved: true,
     levels: [
@@ -110,10 +110,10 @@ export const WEAPON_DEFS = {
   },
 
   celestialBlades: {
-    name: 'CELESTIAL BLADES',
-    short: 'CELEST',
+    name: 'DAWNBLADES',
+    short: 'DAWN',
     color: '#ffe082',
-    description: 'A RING OF GOLD STEEL',
+    description: 'A RING OF DAWN LIGHT',
     maxLevel: 1,
     evolved: true,
     levels: [
@@ -122,8 +122,8 @@ export const WEAPON_DEFS = {
   },
 
   divineNova: {
-    name: 'DIVINE NOVA',
-    short: 'NOVA',
+    name: 'AURORA',
+    short: 'AUROR',
     color: '#fff3c2',
     description: 'LIGHT THAT RESTORES',
     maxLevel: 1,
@@ -135,10 +135,10 @@ export const WEAPON_DEFS = {
   },
 
   thunderCrown: {
-    name: 'THUNDER CROWN',
-    short: 'CROWN',
+    name: 'STARSTORM',
+    short: 'STORM',
     color: '#9be7ff',
-    description: 'LIGHTNING THAT CHAINS',
+    description: 'STARS THAT CHAIN FROM FOE TO FOE',
     maxLevel: 1,
     evolved: true,
     levels: [

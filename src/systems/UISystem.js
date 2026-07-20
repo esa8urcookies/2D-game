@@ -64,8 +64,8 @@ export class UISystem {
     this.drawWaveInfo(ctx, game);
     this.drawBossBar(ctx, game);
 
-    // Coin purse, under the kill counter.
-    drawPixelText(ctx, `COINS ${game.coins}`, GAME_WIDTH - 340, 84, {
+    // Cinder purse, under the kill counter.
+    drawPixelText(ctx, `CINDERS ${game.coins}`, GAME_WIDTH - 340, 84, {
       scale: 3,
       color: 'rgba(255, 213, 79, 0.75)',
     });

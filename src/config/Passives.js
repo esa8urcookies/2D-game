@@ -8,18 +8,18 @@
 
 export const PASSIVE_DEFS = {
   spellbook: {
-    name: 'SPELLBOOK',
-    short: 'BOOK',
+    name: 'BELLOWS',
+    short: 'BELLOW',
     color: '#b388ff',
-    description: 'COOLDOWNS -8%',
+    description: 'STOKE WEAPONS: COOLDOWNS -8%',
     maxLevel: 5,
     apply(game) {
       game.stats.cooldownMultiplier *= 0.92;
     },
   },
   powerStone: {
-    name: 'POWER STONE',
-    short: 'STONE',
+    name: 'SUNSTONE',
+    short: 'SUN',
     color: '#ff8a65',
     description: 'ALL DAMAGE +10%',
     maxLevel: 5,
@@ -28,8 +28,8 @@ export const PASSIVE_DEFS = {
     },
   },
   windBoots: {
-    name: 'WIND BOOTS',
-    short: 'BOOTS',
+    name: 'EMBERSTEP',
+    short: 'STEP',
     color: '#80deea',
     description: '+8% MOVE SPEED',
     maxLevel: 5,
@@ -38,18 +38,18 @@ export const PASSIVE_DEFS = {
     },
   },
   magnetCharm: {
-    name: 'MAGNET CHARM',
-    short: 'CHARM',
+    name: 'LODESTAR',
+    short: 'LODE',
     color: '#4fc3f7',
-    description: '+60 PICKUP RANGE',
+    description: '+60 MOTE PICKUP RANGE',
     maxLevel: 5,
     apply(game) {
       game.stats.magnetRadius += 60;
     },
   },
   ironHeart: {
-    name: 'IRON HEART',
-    short: 'HEART',
+    name: 'EVERFLAME',
+    short: 'FLAME',
     color: '#ef5350',
     description: '+25 MAX HP, HEAL 25',
     maxLevel: 5,
@@ -59,8 +59,8 @@ export const PASSIVE_DEFS = {
     },
   },
   cloverCoin: {
-    name: 'CLOVER COIN',
-    short: 'CLOVER',
+    name: 'WISHING EMBER',
+    short: 'WISH',
     color: '#9ccc65',
     description: 'MORE CHEST LUCK',
     maxLevel: 5,
@@ -75,14 +75,14 @@ export const PASSIVE_DEFS = {
 // already maxed out, so a level-up is never wasted.
 export const FALLBACK_CHOICES = [
   {
-    name: 'FIRST AID',
+    name: 'MENDING LIGHT',
     description: 'RESTORE 50 HP',
     apply(game) {
       game.player.health = Math.min(game.player.maxHealth, game.player.health + 50);
     },
   },
   {
-    name: 'GOLD POUCH',
+    name: 'GATHERED MOTES',
     description: 'GAIN 25 XP',
     apply(game) {
       game.gainXP(25);

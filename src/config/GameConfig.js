@@ -51,8 +51,18 @@ export const XP_CONFIG = {
 
 // --- Enemies ----------------------------------------------------------
 
-// Each entry fully describes one enemy type. Adding a new monster is
-// one new entry here plus a sprite in ProceduralSprites.js.
+// The Gloam — the tide of shadow-things that snuff out light. Each
+// entry fully describes one member of the faction (internal ids stay
+// the same; the fiction is in the comments and the boss's name):
+//   slime   -> GLOAMLET   (a small ooze of living dark)
+//   bat     -> DUSKMOTH   (a fluttering wing of night)
+//   crawler -> CINDERMITE (a bug that eats embers)
+//   brute   -> SNUFFER    (a heavy that stamps out flame)
+//   elite   -> DUSKWARDEN (a crowned captain of the Gloam)
+//   boss    -> THE NIGHTMAW (the hungry mouth of the dark)
+//
+// Adding a new monster is one new entry here plus a sprite in
+// ProceduralSprites.js.
 //   scale    draws the sprite bigger (collision radius is separate)
 //   xpValue  guaranteed gem value on death (otherwise random roll)
 export const ENEMY_TYPES = {
@@ -106,7 +116,7 @@ export const ENEMY_TYPES = {
   },
   boss: {
     sprite: 'boss',
-    displayName: 'THE DEVOURER',
+    displayName: 'THE NIGHTMAW',
     moveSpeed: 165, // relentless: can actually pursue a kiting player
     maxHealth: 800,
     collisionRadius: 90,
@@ -156,11 +166,11 @@ export const WAVE_CONFIG = {
   waveBurstCount: 6,
 
   waves: [
-    { startTime: 0, name: 'THE FIRST SLIMES', interval: 1.5, types: { slime: 1 } },
+    { startTime: 0, name: 'THE GLOAM STIRS', interval: 1.5, types: { slime: 1 } },
     { startTime: 60, name: 'WINGS IN THE DARK', interval: 1.0, types: { slime: 0.7, bat: 0.3 } },
-    { startTime: 120, name: 'THE CRAWLERS COME', interval: 0.8, types: { slime: 0.45, bat: 0.25, crawler: 0.3 } },
-    { startTime: 180, name: 'THE SWARM GROWS', interval: 0.5, types: { slime: 0.4, bat: 0.3, crawler: 0.3 } },
-    { startTime: 240, name: 'HEAVY FOOTSTEPS', interval: 0.45, types: { slime: 0.3, bat: 0.25, crawler: 0.25, brute: 0.18, elite: 0.02 } },
+    { startTime: 120, name: 'CINDERMITES SWARM', interval: 0.8, types: { slime: 0.45, bat: 0.25, crawler: 0.3 } },
+    { startTime: 180, name: 'THE DARK DEEPENS', interval: 0.5, types: { slime: 0.4, bat: 0.3, crawler: 0.3 } },
+    { startTime: 240, name: 'THE SNUFFERS COME', interval: 0.45, types: { slime: 0.3, bat: 0.25, crawler: 0.25, brute: 0.18, elite: 0.02 } },
     { startTime: 300, name: 'ENDLESS NIGHT', interval: 0.4, types: { slime: 0.25, bat: 0.25, crawler: 0.25, brute: 0.2, elite: 0.05 } },
   ],
 

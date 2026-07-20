@@ -97,6 +97,17 @@ export class Player extends Entity {
     const half = this.spriteSize / 2;
     const frame = this.getFrame();
 
+    // The Lampwright's aura: a warm pool of light that follows you.
+    // In a world of smothering dark, you are the only warm light —
+    // it also gently lights up whatever creeps close.
+    const glow = getPlayerGlow();
+    const g = glow.width;
+    const flicker = 1 + Math.sin(this.walkTimer * 20 + this.x * 0.01) * 0.03;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    ctx.drawImage(glow, screen.x - (g * flicker) / 2, screen.y - (g * flicker) / 2, g * flicker, g * flicker);
+    ctx.restore();
+
     ctx.save();
 
     // Blink while the invincibility window is active.
@@ -132,4 +143,22 @@ export class Player extends Entity {
     this.hitTimer = PLAYER_CONFIG.invincibilitySeconds;
     return true;
   }
+}
+
+// The Lampwright's warm light pool, built once and reused every frame.
+let playerGlow = null;
+function getPlayerGlow() {
+  if (playerGlow) return playerGlow;
+  const size = 460;
+  playerGlow = document.createElement('canvas');
+  playerGlow.width = size;
+  playerGlow.height = size;
+  const ctx = playerGlow.getContext('2d');
+  const grad = ctx.createRadialGradient(size / 2, size / 2, 20, size / 2, size / 2, size / 2);
+  grad.addColorStop(0, 'rgba(255, 214, 150, 0.42)');
+  grad.addColorStop(0.5, 'rgba(255, 180, 90, 0.16)');
+  grad.addColorStop(1, 'rgba(255, 170, 80, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  return playerGlow;
 }

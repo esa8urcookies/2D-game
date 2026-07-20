@@ -269,7 +269,7 @@ export class MenuSystem {
       outline: OUTLINE,
       align: 'center',
     });
-    const coinLabel = `COINS ${game.save.totalCoins}`;
+    const coinLabel = `CINDERS ${game.save.totalCoins}`;
     drawPixelText(
       ctx, coinLabel,
       panelX + panelW - 40 - measurePixelText(coinLabel, 4), panelY + 44,
@@ -355,39 +355,46 @@ export class MenuSystem {
     // The logo floats gently, like an old arcade attract screen.
     const bob = Math.round(Math.sin(this.time * 1.6) * 3) * 4;
 
-    drawPixelText(ctx, 'SWARM', GAME_WIDTH / 2, 150 + bob, {
+    drawPixelText(ctx, 'EMBER', GAME_WIDTH / 2, 150 + bob, {
       scale: 22,
       color: GOLD,
       shadeColor: GOLD_DARK,
       outline: OUTLINE,
       align: 'center',
     });
-    drawPixelText(ctx, 'SURVIVORS', GAME_WIDTH / 2, 330 + bob, {
-      scale: 16,
-      color: '#e8ecf4',
-      shadeColor: '#9aa3b8',
+    drawPixelText(ctx, 'WAKE', GAME_WIDTH / 2, 330 + bob, {
+      scale: 20,
+      color: '#ff8a4c',
+      shadeColor: '#b8531f',
       outline: OUTLINE,
       align: 'center',
     });
 
-    this.renderButtons(ctx, game, 545);
+    // Tagline under the logo.
+    drawPixelText(ctx, 'HOLD THE LAST LIGHT', GAME_WIDTH / 2, 500, {
+      scale: 4,
+      color: TEXT_DIM,
+      align: 'center',
+    });
+
+    this.renderButtons(ctx, game, 580);
 
     // Blinking hint, arcade style.
     if (Math.floor(this.time * 1.4) % 2 === 0) {
-      drawPixelText(ctx, 'PRESS ENTER OR CLICK A BUTTON', GAME_WIDTH / 2, 965, {
+      drawPixelText(ctx, 'PRESS ENTER OR CLICK A BUTTON', GAME_WIDTH / 2, 990, {
         scale: 4,
         color: TEXT_DIM,
         align: 'center',
       });
     }
 
-    // Lifetime coin purse, spendable in the shop.
-    drawPixelText(ctx, `COINS ${game.save.totalCoins}`, 36, GAME_HEIGHT - 60, {
+    // Lifetime cinder purse, spendable in the shop.
+    drawPixelText(ctx, `CINDERS ${game.save.totalCoins}`, 36, GAME_HEIGHT - 60, {
       scale: 4,
       color: GOLD,
       outline: OUTLINE,
     });
-    drawPixelText(ctx, 'V0.4', GAME_WIDTH - 120, GAME_HEIGHT - 60, { scale: 4, color: TEXT_DIM });
+    drawPixelText(ctx, 'V0.5', GAME_WIDTH - 120, GAME_HEIGHT - 60, { scale: 4, color: TEXT_DIM });
   }
 
   renderHowTo(ctx, game) {
@@ -404,7 +411,7 @@ export class MenuSystem {
     ctx.fillStyle = '#1b1d28';
     ctx.fillRect(panelX, panelY, panelW, panelH);
 
-    drawPixelText(ctx, 'HOW TO PLAY', GAME_WIDTH / 2, panelY + 34, {
+    drawPixelText(ctx, 'THE LAMPWRIGHT', GAME_WIDTH / 2, panelY + 34, {
       scale: 7,
       color: GOLD,
       shadeColor: GOLD_DARK,
@@ -412,14 +419,27 @@ export class MenuSystem {
       align: 'center',
     });
 
+    // The story premise, then the rules.
+    const story = [
+      'THE WORLD RUNS ON LIGHT. THE LAST BEACON HAS GUTTERED,',
+      'AND THE GLOAM POURS FROM THE DARK TO SNUFF WHAT REMAINS.',
+      'YOU ARE THE FINAL LAMPWRIGHT. HOLD THE LIGHT.',
+    ];
+    story.forEach((line, i) => {
+      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 130 + i * 40, {
+        scale: 2,
+        color: TEXT_DIM,
+        align: 'center',
+      });
+    });
+
     const lines = [
       'MOVE WITH WASD OR THE ARROW KEYS',
-      'YOUR WEAPONS FIRE BY THEMSELVES',
-      'LEVEL UP TO PICK NEW WEAPONS AND ITEMS',
-      'A BOSS COMES EVERY 2 MINUTES - IT DROPS A CHEST',
+      'YOUR LIGHT FIGHTS FOR YOU - GATHER MOTES TO LEVEL UP',
+      'THE NIGHTMAW COMES EVERY 2 MINUTES - IT DROPS A CHEST',
     ];
     lines.forEach((line, i) => {
-      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 150 + i * 54, {
+      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 280 + i * 50, {
         scale: 3,
         color: '#d8dce8',
         align: 'center',
@@ -427,34 +447,34 @@ export class MenuSystem {
     });
 
     // Evolution recipes: max the weapon, own the item, open a chest.
-    drawPixelText(ctx, 'WEAPON EVOLUTIONS', GAME_WIDTH / 2, panelY + 400, {
+    drawPixelText(ctx, 'LIGHT EVOLUTIONS', GAME_WIDTH / 2, panelY + 460, {
       scale: 5,
-      color: '#b388ff',
-      shadeColor: '#6a3ab2',
+      color: '#ff8a4c',
+      shadeColor: '#b8531f',
       outline: OUTLINE,
       align: 'center',
     });
-    drawPixelText(ctx, 'MAX A WEAPON + OWN ITS ITEM, THEN OPEN A CHEST', GAME_WIDTH / 2, panelY + 470, {
+    drawPixelText(ctx, 'MAX A WEAPON + OWN ITS ITEM, THEN OPEN A CHEST', GAME_WIDTH / 2, panelY + 528, {
       scale: 3,
       color: TEXT_DIM,
       align: 'center',
     });
 
     const recipes = [
-      'ARCANE BOLT  +  SPELLBOOK   = ARCANE STORM',
-      'ORBITING BLADE + POWER STONE = CELESTIAL BLADES',
-      'HOLY PULSE   +  IRON HEART  = DIVINE NOVA',
-      'LIGHTNING MARK + CLOVER COIN = THUNDER CROWN',
+      'EMBERSHOT   +  BELLOWS   = CINDERSTORM',
+      'WARDBLADES  +  SUNSTONE  = DAWNBLADES',
+      'SUNBURST    +  EVERFLAME = AURORA',
+      'STARFALL    +  WISHING EMBER = STARSTORM',
     ];
     recipes.forEach((line, i) => {
-      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 520 + i * 46, {
+      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 578 + i * 46, {
         scale: 3,
         color: '#d8dce8',
         align: 'center',
       });
     });
 
-    this.renderButtons(ctx, game, panelY + panelH - 110);
+    this.renderButtons(ctx, game, panelY + panelH - 100);
   }
 
   renderPauseOverlay(ctx, game) {
@@ -483,8 +503,8 @@ export class MenuSystem {
     ctx.fillStyle = 'rgba(24, 8, 12, 0.85)';
     ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
 
-    drawPixelText(ctx, 'GAME OVER', GAME_WIDTH / 2, 64, {
-      scale: 12,
+    drawPixelText(ctx, 'THE LIGHT FADES', GAME_WIDTH / 2, 70, {
+      scale: 9,
       color: '#e04040',
       shadeColor: '#7e2020',
       outline: OUTLINE,
@@ -494,13 +514,13 @@ export class MenuSystem {
     // The run summary.
     const evolutions = game.weapons.owned.filter((w) => w.def.evolved).length;
     const stats = [
-      ['TIME', formatTime(game.survivalTime)],
-      ['LEVEL', String(game.player.level)],
-      ['KILLS', String(game.killCount)],
-      ['BOSSES', String(game.bossesKilled)],
+      ['TIME SURVIVED', formatTime(game.survivalTime)],
+      ['LIGHT LEVEL', String(game.player.level)],
+      ['GLOAM SLAIN', String(game.killCount)],
+      ['NIGHTMAWS FELLED', String(game.bossesKilled)],
       ['EVOLUTIONS', String(evolutions)],
-      ['COINS EARNED', String(game.coins)],
-      ['TOTAL COINS', String(game.save.totalCoins)],
+      ['CINDERS EARNED', String(game.coins)],
+      ['TOTAL CINDERS', String(game.save.totalCoins)],
     ];
     stats.forEach(([label, value], i) => {
       const y = 195 + i * 45;

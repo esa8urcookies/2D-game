@@ -114,11 +114,11 @@ export class ChestSystem {
         game.player.maxHealth,
         game.player.health + CHEST_CONFIG.healAmount
       );
-      return { title: 'HEALING LIGHT', subtitle: `+${CHEST_CONFIG.healAmount} HP` };
+      return { title: 'MENDING LIGHT', subtitle: `+${CHEST_CONFIG.healAmount} HP` };
     }
 
     game.coins += CHEST_CONFIG.coinAmount;
-    return { title: 'GOLD COINS', subtitle: `+${CHEST_CONFIG.coinAmount} COINS` };
+    return { title: 'CINDER HOARD', subtitle: `+${CHEST_CONFIG.coinAmount} CINDERS` };
   }
 
   update(deltaTime, game) {

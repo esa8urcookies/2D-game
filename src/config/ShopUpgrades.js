@@ -1,4 +1,5 @@
-// Permanent upgrades, bought with coins between runs.
+// Permanent upgrades, bought with cinders between runs — the embers
+// you carry back to feed the beacon a little brighter each time.
 // Levels are stored in the save file (SaveData.js) and applied once
 // at the start of every run — pure data plus one apply() each.
 //
@@ -8,7 +9,7 @@
 export const SHOP_UPGRADES = [
   {
     id: 'vitality',
-    name: 'TOUGH HEART',
+    name: 'KINDLED HEART',
     description: '+5 MAX HP PER LEVEL',
     maxLevel: 10,
     baseCost: 10,
@@ -20,7 +21,7 @@ export const SHOP_UPGRADES = [
   },
   {
     id: 'might',
-    name: 'ANCIENT MIGHT',
+    name: 'BRIGHTER FLAME',
     description: '+5% DAMAGE PER LEVEL',
     maxLevel: 10,
     baseCost: 15,
@@ -31,7 +32,7 @@ export const SHOP_UPGRADES = [
   },
   {
     id: 'swiftness',
-    name: 'SWIFT SOUL',
+    name: 'QUICK WICK',
     description: '+3% MOVE SPEED PER LEVEL',
     maxLevel: 10,
     baseCost: 12,
@@ -42,7 +43,7 @@ export const SHOP_UPGRADES = [
   },
   {
     id: 'wisdom',
-    name: 'OLD WISDOM',
+    name: 'EMBER SENSE',
     description: '+5% XP GAIN PER LEVEL',
     maxLevel: 10,
     baseCost: 12,
@@ -53,7 +54,7 @@ export const SHOP_UPGRADES = [
   },
   {
     id: 'reach',
-    name: 'LONG REACH',
+    name: 'FAR GLOW',
     description: '+5% PICKUP RANGE PER LEVEL',
     maxLevel: 10,
     baseCost: 10,
@@ -64,8 +65,8 @@ export const SHOP_UPGRADES = [
   },
   {
     id: 'wealth',
-    name: 'LUCKY PURSE',
-    description: '+10 STARTING COINS PER LEVEL',
+    name: 'FULL COFFER',
+    description: '+10 STARTING CINDERS PER LEVEL',
     maxLevel: 5,
     baseCost: 25,
     costGrowth: 1.6,
@@ -75,7 +76,7 @@ export const SHOP_UPGRADES = [
   },
 ];
 
-/** Coin price of the NEXT level of an upgrade. */
+/** Cinder price of the NEXT level of an upgrade. */
 export function upgradeCost(def, currentLevel) {
   return Math.round(def.baseCost * Math.pow(def.costGrowth, currentLevel));
 }
