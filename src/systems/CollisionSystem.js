@@ -4,6 +4,7 @@
 
 import { normalize } from '../core/MathUtils.js';
 import { audio } from '../core/Audio.js';
+import { SpatialGrid } from '../core/SpatialGrid.js';
 import { WEAPON_CONFIG, ENEMY_CONFIG, EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 /** True if two circles overlap (compares squared distances — no sqrt). */
@@ -14,8 +15,21 @@ export function circlesOverlap(x1, y1, r1, x2, y2, r2) {
   return dx * dx + dy * dy < reach * reach;
 }
 
+// The cell size must be >= the largest collision reach we ever test.
+// Biggest case: player radius 45 + boss radius 90 = 135, so 140 makes
+// every 3x3 neighbor query exact.
+const GRID_CELL_SIZE = 140;
+
 export class CollisionSystem {
+  constructor() {
+    this.grid = new SpatialGrid(GRID_CELL_SIZE);
+  }
+
   update(game) {
+    // Build the enemy grid once; all three passes reuse it instead of
+    // scanning every enemy against every other one.
+    this.grid.build(game.enemies);
+
     this.projectilesVsEnemies(game);
     this.enemiesVsPlayer(game);
     this.separateEnemies(game.enemies);
@@ -23,14 +37,15 @@ export class CollisionSystem {
 
   /**
    * Each projectile damages enemies it touches. With pierce it can
-   * pass through several, but never hits the same enemy twice.
+   * pass through several, but never hits the same enemy twice. Only
+   * enemies near the projectile are considered, via the grid.
    */
   projectilesVsEnemies(game) {
     for (const projectile of game.projectiles) {
       if (projectile.dead) continue;
 
-      for (const enemy of game.enemies) {
-        if (enemy.dead || projectile.alreadyHit.has(enemy)) continue;
+      this.grid.forEachNeighbor(projectile.x, projectile.y, (enemy) => {
+        if (projectile.dead || enemy.dead || projectile.alreadyHit.has(enemy)) return;
 
         if (
           circlesOverlap(
@@ -48,10 +63,9 @@ export class CollisionSystem {
           projectile.hitsLeft -= 1;
           if (projectile.hitsLeft <= 0) {
             projectile.dead = true;
-            break; // this projectile is spent
           }
         }
-      }
+      });
     }
   }
 
@@ -59,8 +73,8 @@ export class CollisionSystem {
   enemiesVsPlayer(game) {
     const player = game.player;
 
-    for (const enemy of game.enemies) {
-      if (enemy.dead) continue;
+    this.grid.forEachNeighbor(player.x, player.y, (enemy) => {
+      if (enemy.dead || player.hitTimer > 0) return;
 
       if (
         circlesOverlap(
@@ -74,41 +88,35 @@ export class CollisionSystem {
           audio.play('playerDamage');
         }
       }
-    }
+    });
   }
 
   /**
-   * Push overlapping enemies apart a little so they spread into a
-   * horde instead of stacking into one invisible super-enemy.
+   * Push overlapping enemies apart so they spread into a horde instead
+   * of stacking into one invisible super-enemy. Each enemy only tests
+   * its grid neighbors; it pushes itself half the overlap away from
+   * each, and the neighbor does the same on its own turn, so the
+   * result matches the old full O(n²) pass.
    */
   separateEnemies(enemies) {
-    for (let i = 0; i < enemies.length; i++) {
-      for (let j = i + 1; j < enemies.length; j++) {
-        const a = enemies[i];
-        const b = enemies[j];
+    const overlap = ENEMY_CONFIG.separationOverlap;
 
-        const minGap =
-          (a.collisionRadius + b.collisionRadius) * ENEMY_CONFIG.separationOverlap;
+    for (const a of enemies) {
+      this.grid.forEachNeighbor(a.x, a.y, (b) => {
+        if (b === a) return;
 
-        // Compare squared distances first: with hundreds of enemies
-        // this loop runs tens of thousands of times per frame, and
-        // skipping the square root for far-apart pairs keeps it fast.
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
+        const minGap = (a.collisionRadius + b.collisionRadius) * overlap;
+        const dx = a.x - b.x;
+        const dy = a.y - b.y;
         const distanceSquared = dx * dx + dy * dy;
 
         if (distanceSquared > 0 && distanceSquared < minGap * minGap) {
           const d = Math.sqrt(distanceSquared);
           const push = (minGap - d) / 2;
-          const nx = dx / d;
-          const ny = dy / d;
-
-          a.x -= nx * push;
-          a.y -= ny * push;
-          b.x += nx * push;
-          b.y += ny * push;
+          a.x += (dx / d) * push;
+          a.y += (dy / d) * push;
         }
-      }
+      });
     }
   }
 }

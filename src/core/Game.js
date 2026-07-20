@@ -61,6 +61,9 @@ export class Game {
     // 'menu', 'playing', 'paused', 'levelup', 'chest', 'gameover'
     this.state = 'menu';
 
+    // The debug performance panel; toggle with the ` (backtick) key.
+    this.showDebug = true;
+
     // Persistent progress: total coins + permanent shop upgrades.
     this.save = loadSave();
 
@@ -238,6 +241,9 @@ export class Game {
   handleMuteButton() {
     if (this.input.wasPressed('KeyM')) {
       audio.toggleMute();
+    }
+    if (this.input.wasPressed('Backquote')) {
+      this.showDebug = !this.showDebug;
     }
     if (this.input.clickedThisFrame) {
       const { x, y, w, h } = MUTE_RECT;

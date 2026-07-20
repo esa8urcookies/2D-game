@@ -16,7 +16,10 @@ export class Weapon {
 
   /** Stats for the current level. */
   get stats() {
-    return this.def.levels[this.level - 1];
+    // Clamp the index so an out-of-range level can never return
+    // undefined (which would crash weapon logic reading its stats).
+    const index = Math.max(0, Math.min(this.level - 1, this.def.levels.length - 1));
+    return this.def.levels[index];
   }
 
   get isMaxLevel() {

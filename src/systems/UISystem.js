@@ -70,13 +70,41 @@ export class UISystem {
       color: 'rgba(255, 213, 79, 0.75)',
     });
 
-    // Debug info, bottom left (small, quiet), above the XP bar.
+    if (game.showDebug) this.drawDebug(ctx, game);
+  }
+
+  /**
+   * A compact performance panel, bottom-left above the XP bar. Toggle
+   * with the ` (backtick) key. Green FPS is healthy, amber is a dip.
+   */
+  drawDebug(ctx, game) {
+    const pickups =
+      game.gems.length + game.coinPickups.length +
+      game.potions.length + game.chests.length;
+
+    const lines = [
+      `FPS ${this.fps}`,
+      `ENEMIES ${game.enemies.length}`,
+      `PROJECTILES ${game.projectiles.length}`,
+      `PARTICLES ${game.particles.particles.length}`,
+      `PICKUPS ${pickups}`,
+    ];
+
     ctx.save();
     ctx.textBaseline = 'top';
-    ctx.font = '24px monospace';
+    ctx.font = '22px monospace';
     ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.fillText(`FPS: ${this.fps}  Enemies: ${game.enemies.length}`, 24, GAME_HEIGHT - 100);
+    const baseY = GAME_HEIGHT - 92 - (lines.length - 1) * 26;
+
+    lines.forEach((line, i) => {
+      // Only the FPS line is color-coded for health.
+      if (i === 0) {
+        ctx.fillStyle = this.fps >= 50 ? '#5cd65c' : this.fps >= 30 ? '#ffd54f' : '#e04040';
+      } else {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      }
+      ctx.fillText(line, 24, baseY + i * 26);
+    });
     ctx.restore();
   }
 
