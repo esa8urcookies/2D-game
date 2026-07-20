@@ -2,7 +2,7 @@
 // It follows a target (the player), converts world coordinates into
 // screen coordinates, and can shake briefly for impact feedback.
 
-import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT, EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 export class Camera {
   constructor() {
@@ -16,9 +16,20 @@ export class Camera {
     this.shakeOffsetY = 0;
   }
 
-  /** Kick off a small shake, e.g. when the player is hit. */
+  /**
+   * Kick off a small shake, e.g. when the player is hit. Intensity is
+   * clamped so nothing can ever request a screen-wrecking earthquake.
+   * A weaker, still-running shake never overrides a stronger one.
+   */
   shake(intensity = 8, duration = 0.25) {
-    this.shakeIntensity = intensity;
+    const clamped = Math.min(intensity, EFFECTS_CONFIG.maxShakeIntensity);
+    // If a currently stronger shake is still playing, let it finish
+    // rather than replacing it with a weaker one.
+    const currentStrength =
+      this.shakeTime > 0 ? this.shakeIntensity * (this.shakeTime / this.shakeDuration) : 0;
+    if (currentStrength > clamped) return;
+
+    this.shakeIntensity = clamped;
     this.shakeDuration = duration;
     this.shakeTime = duration;
   }

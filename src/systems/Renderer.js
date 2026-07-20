@@ -32,6 +32,7 @@ export class Renderer {
     game.player.render(this.ctx, game.camera);
     game.weapons.render(this.ctx, game.camera, game);
     this.drawAll(game.projectiles, game.camera);
+    game.particles.render(this.ctx, game.camera);
     this.drawAll(game.damageTexts, game.camera);
 
     this.drawVignette();

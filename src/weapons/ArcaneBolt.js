@@ -9,6 +9,7 @@
 import { Weapon } from './Weapon.js';
 import { Projectile } from '../entities/Projectile.js';
 import { normalize, distance } from '../core/MathUtils.js';
+import { audio } from '../core/Audio.js';
 
 export class ArcaneBolt extends Weapon {
   fire(game) {
@@ -29,6 +30,7 @@ export class ArcaneBolt extends Weapon {
         })
       );
     }
+    audio.play('shoot');
     return true;
   }
 

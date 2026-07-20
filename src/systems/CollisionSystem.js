@@ -3,6 +3,7 @@
 // sprites, so the game feels fair.
 
 import { normalize } from '../core/MathUtils.js';
+import { audio } from '../core/Audio.js';
 import { WEAPON_CONFIG, ENEMY_CONFIG, EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 /** True if two circles overlap (compares squared distances — no sqrt). */
@@ -70,6 +71,7 @@ export class CollisionSystem {
         if (player.takeDamage(enemy.contactDamage)) {
           const { intensity, duration } = EFFECTS_CONFIG.playerHitShake;
           game.camera.shake(intensity, duration);
+          audio.play('playerDamage');
         }
       }
     }

@@ -11,8 +11,9 @@
 
 import { getChestSprite } from '../entities/Chest.js';
 import { drawPixelText } from '../assets/PixelFont.js';
+import { audio } from '../core/Audio.js';
 import { PASSIVE_DEFS } from '../config/Passives.js';
-import { GAME_WIDTH, GAME_HEIGHT, CHEST_CONFIG } from '../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT, CHEST_CONFIG, EFFECTS_CONFIG } from '../config/GameConfig.js';
 
 const GOLD = '#ffd54f';
 const GOLD_DARK = '#c8891a';
@@ -127,6 +128,18 @@ export class ChestSystem {
       this.reward = this.rollReward(game);
       this.phase = 'burst';
       this.timer = 0;
+
+      // The payoff moment: sound + a bounded screen shake, bigger for
+      // an evolution.
+      if (this.reward.isEvolution) {
+        audio.play('evolve');
+        const { intensity, duration } = EFFECTS_CONFIG.evolveShake;
+        game.camera.shake(intensity, duration);
+      } else {
+        audio.play('chestOpen');
+        const { intensity, duration } = EFFECTS_CONFIG.chestShake;
+        game.camera.shake(intensity, duration);
+      }
     } else if (this.phase === 'burst' && this.timer >= BURST_SECONDS) {
       this.phase = 'reward';
       this.timer = 0;
@@ -165,9 +178,13 @@ export class ChestSystem {
 
     if (this.phase === 'burst') {
       // A flash of light rays exploding outward — bigger and purple
-      // when a weapon is evolving.
+      // when a weapon is evolving. The dark overlay hides the world's
+      // camera shake, so the burst shakes itself for the same punch.
       const progress = this.timer / BURST_SECONDS;
       const rayCount = isEvolution ? 20 : 12;
+      const shakeAmt = (isEvolution ? 16 : 8) * (1 - progress);
+      const sx = centerX + (Math.random() * 2 - 1) * shakeAmt;
+      const sy = centerY + (Math.random() * 2 - 1) * shakeAmt;
 
       ctx.save();
       ctx.globalAlpha = 1 - progress;
@@ -176,14 +193,14 @@ export class ChestSystem {
         const angle = (i / rayCount) * Math.PI * 2;
         const length = 120 + progress * (isEvolution ? 1100 : 700);
         ctx.save();
-        ctx.translate(centerX, centerY);
+        ctx.translate(sx, sy);
         ctx.rotate(angle);
         ctx.fillRect(0, -14, length, 28);
         ctx.restore();
       }
       ctx.restore();
 
-      this.drawChest(ctx, centerX, centerY, true);
+      this.drawChest(ctx, sx, sy, true);
       return;
     }
 

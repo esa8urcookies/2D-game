@@ -98,6 +98,7 @@ export class XPGem extends Entity {
     super(x, y, 20);
 
     this.value = tier.value;
+    this.color = tier.color; // used for the pickup sparkle
     this.sprite = getGemSprite(tier);
 
     // A little scatter pop when dropped, so gems don't stack into a

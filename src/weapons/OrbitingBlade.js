@@ -69,9 +69,17 @@ export class OrbitingBlade extends Weapon {
   }
 
   render(ctx, camera, game) {
+    const glow = this.def.evolved ? getBladeGlow() : null;
+
     for (let i = 0; i < this.stats.blades; i++) {
       const blade = this.bladePosition(game, i);
       const screen = camera.worldToScreen(blade.x, blade.y);
+
+      // Evolved blades trail a soft golden glow.
+      if (glow) {
+        const g = this.stats.size * 2.4;
+        ctx.drawImage(glow, screen.x - g / 2, screen.y - g / 2, g, g);
+      }
 
       ctx.save();
       ctx.translate(screen.x, screen.y);
@@ -83,6 +91,22 @@ export class OrbitingBlade extends Weapon {
       ctx.restore();
     }
   }
+}
+
+// Soft golden glow for the evolved blades, built once.
+let bladeGlow = null;
+function getBladeGlow() {
+  if (bladeGlow) return bladeGlow;
+  bladeGlow = document.createElement('canvas');
+  bladeGlow.width = 96;
+  bladeGlow.height = 96;
+  const ctx = bladeGlow.getContext('2d');
+  const grad = ctx.createRadialGradient(48, 48, 4, 48, 48, 48);
+  grad.addColorStop(0, 'rgba(255, 224, 130, 0.55)');
+  grad.addColorStop(1, 'rgba(255, 224, 130, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 96, 96);
+  return bladeGlow;
 }
 
 /** A small pixel sword, drawn once. Gold for the evolved form. */

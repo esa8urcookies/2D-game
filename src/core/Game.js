@@ -16,9 +16,12 @@ import { CollisionSystem } from '../systems/CollisionSystem.js';
 import { MenuSystem } from '../systems/MenuSystem.js';
 import { UpgradeSystem } from '../systems/UpgradeSystem.js';
 import { ChestSystem } from '../systems/ChestSystem.js';
+import { ParticleSystem } from '../systems/ParticleSystem.js';
 import { Chest } from '../entities/Chest.js';
 import { Coin } from '../entities/Coin.js';
 import { loadSave, persistSave } from './SaveData.js';
+import { audio } from './Audio.js';
+import { drawPixelText } from '../assets/PixelFont.js';
 import { SHOP_UPGRADES } from '../config/ShopUpgrades.js';
 import {
   GAME_WIDTH,
@@ -27,7 +30,11 @@ import {
   XP_CONFIG,
   ENEMY_TYPES,
   COIN_CONFIG,
+  EFFECTS_CONFIG,
 } from '../config/GameConfig.js';
+
+// The mute toggle lives at a fixed screen spot on every screen.
+const MUTE_RECT = { x: GAME_WIDTH - 84, y: 24, w: 56, h: 56 };
 
 // If the browser tab lags or is backgrounded, a single frame could
 // report a huge delta time. Capping it prevents physics jumps.
@@ -47,6 +54,7 @@ export class Game {
     this.collisions = new CollisionSystem();
     this.upgrades = new UpgradeSystem();
     this.chestSystem = new ChestSystem();
+    this.particles = new ParticleSystem();
 
     // 'menu', 'playing', 'paused', 'levelup', 'chest', 'gameover'
     this.state = 'menu';
@@ -75,6 +83,7 @@ export class Game {
     this.chests = [];
     this.coinPickups = [];
     this.coins = 0; // coins earned THIS run; banked on death
+    this.particles.clear();
     this.spawner = new Spawner();
     this.weapons = new WeaponSystem();
     this.weapons.addWeapon('arcaneBolt'); // the starting weapon
@@ -163,14 +172,27 @@ export class Game {
    */
   damageEnemy(enemy, amount, dirX = 0, dirY = 0, knockbackForce = 0) {
     const total = Math.round(amount * this.stats.damageMultiplier);
+    const wasAlive = !enemy.dead;
     enemy.takeDamage(total, dirX, dirY, knockbackForce);
     this.addDamageText(total, enemy.x, enemy.y - 60);
+    // Death is handled (with its bigger burst) in removeDeadEntities;
+    // only play the light hit tick for survivors.
+    if (wasAlive && !enemy.dead) audio.play('enemyHit');
   }
 
   /** Called by a gem when the player picks it up. */
   collectGem(gem) {
     gem.dead = true;
     this.gainXP(gem.value);
+    // A small sparkle in the gem's color, plus a soft blip.
+    this.particles.burst(gem.x, gem.y, {
+      count: 5,
+      color: gem.color,
+      speed: [40, 140],
+      size: [3, 6],
+      life: [0.2, 0.4],
+    });
+    audio.play('xpPickup');
   }
 
   /** Add XP (boosted by Old Wisdom) and bank any level-ups. */
@@ -197,13 +219,38 @@ export class Game {
       // More banked level-ups: roll a fresh set of cards.
       this.pendingLevelUps -= 1;
       this.upgrades.rollChoices(this);
-      if (!this.upgrades.isEmpty()) return;
+      if (!this.upgrades.isEmpty()) {
+        audio.play('levelUp');
+        return;
+      }
     }
     this.state = 'playing';
   }
 
+  /**
+   * Toggle mute if the mute button was clicked or M was pressed.
+   * Runs before every screen's own input so the click is consumed
+   * and never doubles as a game action.
+   */
+  handleMuteButton() {
+    if (this.input.wasPressed('KeyM')) {
+      audio.toggleMute();
+    }
+    if (this.input.clickedThisFrame) {
+      const { x, y, w, h } = MUTE_RECT;
+      if (
+        this.input.mouseX >= x && this.input.mouseX <= x + w &&
+        this.input.mouseY >= y && this.input.mouseY <= y + h
+      ) {
+        audio.toggleMute();
+        this.input.clickedThisFrame = false; // don't let it click through
+      }
+    }
+  }
+
   update(deltaTime) {
     this.camera.update(deltaTime);
+    this.handleMuteButton();
 
     if (this.state === 'playing') {
       this.updateGameplay(deltaTime);
@@ -244,6 +291,7 @@ export class Game {
     for (const coin of this.coinPickups) coin.update(deltaTime, this);
     for (const chest of this.chests) chest.update(deltaTime, this);
     for (const text of this.damageTexts) text.update(deltaTime, this);
+    this.particles.update(deltaTime);
 
     this.collisions.update(this);
     this.removeDeadEntities();
@@ -255,6 +303,7 @@ export class Game {
       this.state = 'gameover';
       this.pendingLevelUps = 0;
       this.menu.selectedIndex = 0;
+      audio.play('gameOver');
 
       // Bank this run's coins into the permanent save, exactly once.
       if (!this.coinsBanked) {
@@ -270,6 +319,7 @@ export class Game {
       this.upgrades.rollChoices(this);
       if (!this.upgrades.isEmpty()) {
         this.state = 'levelup';
+        audio.play('levelUp');
       }
     }
   }
@@ -281,10 +331,37 @@ export class Game {
     for (const enemy of this.enemies) {
       if (enemy.dead) {
         this.killCount += 1;
-        if (enemy.isBoss) this.bossesKilled += 1;
+        const type = ENEMY_TYPES[enemy.typeName];
+
+        // Death burst: chunks in the enemy's color. Bigger enemies
+        // spray more; the particle cap keeps this cheap in a swarm.
+        this.particles.burst(enemy.x, enemy.y, {
+          count: Math.round(8 * enemy.scale),
+          color: type.color || '#ffffff',
+          speed: [80, 260 * enemy.scale],
+          size: [4, 10 * enemy.scale],
+          life: [0.3, 0.6],
+          gravity: 300,
+        });
+        audio.play('enemyDeath');
+
+        if (enemy.isBoss) {
+          this.bossesKilled += 1;
+          // A boss going down earns a real (still bounded) shake and
+          // a much bigger burst.
+          const { intensity, duration } = EFFECTS_CONFIG.bossDeathShake;
+          this.camera.shake(intensity, duration);
+          this.particles.burst(enemy.x, enemy.y, {
+            count: 40,
+            color: type.color || '#ffffff',
+            speed: [120, 520],
+            size: [6, 16],
+            life: [0.4, 0.9],
+            gravity: 260,
+          });
+        }
 
         // Big enemies guarantee a big gem; the rest roll for one.
-        const type = ENEMY_TYPES[enemy.typeName];
         const tier = type.xpValue ? tierForValue(type.xpValue) : rollGemTier();
         this.gems.push(new XPGem(enemy.x, enemy.y, tier));
 
@@ -317,6 +394,7 @@ export class Game {
       this.ctx.fillStyle = 'rgba(12, 14, 20, 0.4)';
       this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.menu.render(this);
+      this.drawMuteButton();
       return;
     }
 
@@ -330,5 +408,50 @@ export class Game {
     } else if (this.state === 'paused' || this.state === 'gameover') {
       this.menu.render(this);
     }
+
+    this.drawMuteButton();
+  }
+
+  /** A small speaker icon that shows, and toggles, the mute state. */
+  drawMuteButton() {
+    const ctx = this.ctx;
+    const { x, y, w, h } = MUTE_RECT;
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(22, 22, 31, 0.6)';
+    ctx.fillRect(x, y, w, h);
+
+    // Speaker body + cone.
+    ctx.fillStyle = audio.muted ? '#8a90a3' : '#ffd54f';
+    ctx.beginPath();
+    ctx.moveTo(x + 14, y + 22);
+    ctx.lineTo(x + 22, y + 22);
+    ctx.lineTo(x + 32, y + 12);
+    ctx.lineTo(x + 32, y + 44);
+    ctx.lineTo(x + 22, y + 34);
+    ctx.lineTo(x + 14, y + 34);
+    ctx.closePath();
+    ctx.fill();
+
+    if (audio.muted) {
+      // A red slash when muted.
+      ctx.strokeStyle = '#e04040';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x + 36, y + 16);
+      ctx.lineTo(x + 46, y + 40);
+      ctx.stroke();
+    } else {
+      // Sound waves when audible.
+      ctx.strokeStyle = '#ffd54f';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(x + 34, y + 28, 8, -0.7, 0.7);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x + 34, y + 28, 15, -0.7, 0.7);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 }

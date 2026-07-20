@@ -58,6 +58,7 @@ export const ENEMY_TYPES = {
     maxHealth: 30, // ...but takes a few hits
     collisionRadius: 52,
     contactDamage: 12, // HP the player loses on touch
+    color: '#66bb6a', // tint of the death-burst particles
   },
   bat: {
     sprite: 'bat',
@@ -66,6 +67,7 @@ export const ENEMY_TYPES = {
     maxHealth: 10, // ...but dies quickly
     collisionRadius: 40,
     contactDamage: 7,
+    color: '#7e57c2',
   },
   crawler: {
     sprite: 'crawler',
@@ -74,6 +76,7 @@ export const ENEMY_TYPES = {
     maxHealth: 25,
     collisionRadius: 42, // ...and slightly harder to hit
     contactDamage: 10,
+    color: '#26a69a',
   },
   brute: {
     sprite: 'brute',
@@ -82,6 +85,7 @@ export const ENEMY_TYPES = {
     collisionRadius: 60,
     contactDamage: 20,
     xpValue: 5, // always drops a green gem
+    color: '#8d6e63',
   },
   elite: {
     sprite: 'elite',
@@ -91,6 +95,7 @@ export const ENEMY_TYPES = {
     contactDamage: 25,
     scale: 1.3, // visibly bigger than everything else
     xpValue: 10, // always drops a red gem
+    color: '#ab47bc',
   },
   boss: {
     sprite: 'boss',
@@ -104,6 +109,7 @@ export const ENEMY_TYPES = {
     isBoss: true, // gets the big health bar
     dropsChest: true, // treasure on death
     knockbackResistance: 0.15, // barely budges when hit
+    color: '#b71c1c',
   },
 };
 
@@ -184,8 +190,18 @@ export const CHEST_CONFIG = {
 // --- Feedback effects -------------------------------------------------
 
 export const EFFECTS_CONFIG = {
+  // Screen-shake presets. Intensities are kept small on purpose so
+  // feedback never turns into a nauseating earthquake; the camera
+  // also clamps every shake to maxShakeIntensity.
   playerHitShake: { intensity: 7, duration: 0.25 },
+  bossDeathShake: { intensity: 14, duration: 0.6 },
+  chestShake: { intensity: 6, duration: 0.3 },
+  evolveShake: { intensity: 12, duration: 0.5 },
+  maxShakeIntensity: 16, // absolute cap, no matter what asks for a shake
+
   damageText: { riseSpeed: 90, lifeSeconds: 0.7 },
+  lowHealthThreshold: 0.25, // red warning pulse below this HP fraction
+
   // Entities are culled/cleaned up this far outside the screen.
   offScreenMargin: 200,
 };

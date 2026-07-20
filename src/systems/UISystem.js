@@ -2,7 +2,7 @@
 // the same pixel font as the menu so everything matches.
 // Everything is positioned in the internal 1920x1080 space.
 
-import { GAME_WIDTH, GAME_HEIGHT, XP_CONFIG, ENEMY_TYPES } from '../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT, XP_CONFIG, ENEMY_TYPES, EFFECTS_CONFIG } from '../config/GameConfig.js';
 import { PASSIVE_DEFS } from '../config/Passives.js';
 import { formatTime } from '../core/MathUtils.js';
 import { drawPixelText } from '../assets/PixelFont.js';
@@ -16,11 +16,17 @@ export class UISystem {
     this.fps = 0;
     this.fpsTimer = 0;
     this.frameCount = 0;
+
+    // Pre-rendered red edge glow for the low-health warning, so it
+    // costs one blit per frame instead of a fresh gradient.
+    this.lowHealthOverlay = buildLowHealthOverlay();
+    this.warningPhase = 0;
   }
 
   update(deltaTime) {
     this.frameCount += 1;
     this.fpsTimer += deltaTime;
+    this.warningPhase += deltaTime;
 
     // Refresh the displayed FPS twice per second.
     if (this.fpsTimer >= 0.5) {
@@ -33,6 +39,7 @@ export class UISystem {
   render(game) {
     const ctx = this.ctx;
 
+    this.drawLowHealthWarning(ctx, game);
     this.drawHealthBar(ctx, game.player);
     this.drawXPBar(ctx, game.player);
     this.drawEquipment(ctx, game);
@@ -70,6 +77,27 @@ export class UISystem {
     ctx.textAlign = 'left';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
     ctx.fillText(`FPS: ${this.fps}  Enemies: ${game.enemies.length}`, 24, GAME_HEIGHT - 100);
+    ctx.restore();
+  }
+
+  /**
+   * A pulsing red glow around the screen edges when the player is
+   * badly hurt. Only during play, and it stays subtle so the action
+   * underneath is never hidden.
+   */
+  drawLowHealthWarning(ctx, game) {
+    if (game.state !== 'playing') return;
+
+    const percent = game.player.health / game.player.maxHealth;
+    if (percent >= EFFECTS_CONFIG.lowHealthThreshold) return;
+
+    // Pulse faster and stronger the closer to death. The pulse keeps
+    // a floor so the warning is always at least faintly visible.
+    const urgency = 1 - percent / EFFECTS_CONFIG.lowHealthThreshold;
+    const pulse = 0.65 + 0.35 * Math.sin(this.warningPhase * (5 + urgency * 4));
+    ctx.save();
+    ctx.globalAlpha = (0.3 + urgency * 0.45) * pulse;
+    ctx.drawImage(this.lowHealthOverlay, 0, 0);
     ctx.restore();
   }
 
@@ -207,4 +235,22 @@ export class UISystem {
       outline: '#16161f',
     });
   }
+}
+
+/** Red radial edge glow, built once for the low-health warning. */
+function buildLowHealthOverlay() {
+  const canvas = document.createElement('canvas');
+  canvas.width = GAME_WIDTH;
+  canvas.height = GAME_HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  const gradient = ctx.createRadialGradient(
+    GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_HEIGHT * 0.45,
+    GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_HEIGHT * 0.95
+  );
+  gradient.addColorStop(0, 'rgba(200, 20, 20, 0)');
+  gradient.addColorStop(1, 'rgba(200, 20, 20, 1)');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  return canvas;
 }

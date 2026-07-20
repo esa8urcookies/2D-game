@@ -4,6 +4,7 @@
 
 import { Entity } from './Entity.js';
 import { normalize } from '../core/MathUtils.js';
+import { audio } from '../core/Audio.js';
 import { XP_CONFIG, COIN_CONFIG } from '../config/GameConfig.js';
 
 // --- Coin sprite, built once ---------------------------------------------
@@ -67,6 +68,14 @@ export class Coin extends Entity {
     if (distanceSquared < pickup * pickup) {
       this.dead = true;
       game.coins += COIN_CONFIG.value;
+      game.particles.burst(this.x, this.y, {
+        count: 5,
+        color: '#ffd54f',
+        speed: [40, 150],
+        size: [3, 6],
+        life: [0.2, 0.4],
+      });
+      audio.play('coin');
       return;
     }
 
