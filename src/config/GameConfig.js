@@ -100,7 +100,7 @@ export const ENEMY_TYPES = {
   boss: {
     sprite: 'boss',
     displayName: 'THE DEVOURER',
-    moveSpeed: 85, // slightly slower than a slime
+    moveSpeed: 165, // relentless: can actually pursue a kiting player
     maxHealth: 900,
     collisionRadius: 90,
     contactDamage: 30,

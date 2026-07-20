@@ -162,7 +162,13 @@ class AudioEngine {
 const SOUNDS = {
   shoot: {
     throttle: 45,
-    play: (a) => a.tone({ type: 'square', freq: 720, endFreq: 340, duration: 0.09, gain: 0.16 }),
+    play: (a) => {
+      // A crisp arcane "pew": a bright sparkle transient on top of a
+      // fast downward body sweep, with a tiny noise tick for punch.
+      a.tone({ type: 'triangle', freq: 1300, endFreq: 460, duration: 0.11, gain: 0.15 });
+      a.tone({ type: 'sine', freq: 1900, endFreq: 900, duration: 0.05, gain: 0.09 });
+      a.noise({ duration: 0.03, gain: 0.05, filterFreq: 3200, filterType: 'highpass' });
+    },
   },
   enemyHit: {
     throttle: 30,

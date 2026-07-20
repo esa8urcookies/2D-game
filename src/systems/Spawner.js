@@ -111,8 +111,10 @@ export class Spawner {
   }
 
   spawnBoss(game) {
+    // Just past the screen edge (not the far ring) so the boss reaches
+    // the fight quickly; the UI also draws an arrow pointing to it.
     const angle = randomRange(0, Math.PI * 2);
-    const distance = OFF_SCREEN_DISTANCE + WAVE_CONFIG.spawnMarginMax;
+    const distance = OFF_SCREEN_DISTANCE + 120;
     const x = game.player.x + Math.cos(angle) * distance;
     const y = game.player.y + Math.sin(angle) * distance;
 

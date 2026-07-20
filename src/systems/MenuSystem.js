@@ -393,9 +393,9 @@ export class MenuSystem {
   renderHowTo(ctx, game) {
     // Panel with a double pixel border.
     const panelW = 1240;
-    const panelH = 690;
+    const panelH = 850;
     const panelX = (GAME_WIDTH - panelW) / 2;
-    const panelY = 140;
+    const panelY = 80;
 
     ctx.fillStyle = OUTLINE;
     ctx.fillRect(panelX - U * 2, panelY - U * 2, panelW + U * 4, panelH + U * 4);
@@ -404,8 +404,8 @@ export class MenuSystem {
     ctx.fillStyle = '#1b1d28';
     ctx.fillRect(panelX, panelY, panelW, panelH);
 
-    drawPixelText(ctx, 'HOW TO PLAY', GAME_WIDTH / 2, panelY + 50, {
-      scale: 8,
+    drawPixelText(ctx, 'HOW TO PLAY', GAME_WIDTH / 2, panelY + 34, {
+      scale: 7,
       color: GOLD,
       shadeColor: GOLD_DARK,
       outline: OUTLINE,
@@ -414,20 +414,47 @@ export class MenuSystem {
 
     const lines = [
       'MOVE WITH WASD OR THE ARROW KEYS',
-      'YOUR WEAPON FIRES BY ITSELF',
-      'IT ALWAYS AIMS AT THE NEAREST ENEMY',
-      'DODGE THE MONSTERS AND SURVIVE',
-      'PRESS ESC TO PAUSE',
+      'YOUR WEAPONS FIRE BY THEMSELVES',
+      'LEVEL UP TO PICK NEW WEAPONS AND ITEMS',
+      'A BOSS COMES EVERY 2 MINUTES - IT DROPS A CHEST',
     ];
     lines.forEach((line, i) => {
-      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 170 + i * 70, {
-        scale: 4,
+      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 150 + i * 54, {
+        scale: 3,
         color: '#d8dce8',
         align: 'center',
       });
     });
 
-    this.renderButtons(ctx, game, panelY + panelH - 130);
+    // Evolution recipes: max the weapon, own the item, open a chest.
+    drawPixelText(ctx, 'WEAPON EVOLUTIONS', GAME_WIDTH / 2, panelY + 400, {
+      scale: 5,
+      color: '#b388ff',
+      shadeColor: '#6a3ab2',
+      outline: OUTLINE,
+      align: 'center',
+    });
+    drawPixelText(ctx, 'MAX A WEAPON + OWN ITS ITEM, THEN OPEN A CHEST', GAME_WIDTH / 2, panelY + 470, {
+      scale: 3,
+      color: TEXT_DIM,
+      align: 'center',
+    });
+
+    const recipes = [
+      'ARCANE BOLT  +  SPELLBOOK   = ARCANE STORM',
+      'ORBITING BLADE + POWER STONE = CELESTIAL BLADES',
+      'HOLY PULSE   +  IRON HEART  = DIVINE NOVA',
+      'LIGHTNING MARK + CLOVER COIN = THUNDER CROWN',
+    ];
+    recipes.forEach((line, i) => {
+      drawPixelText(ctx, line, GAME_WIDTH / 2, panelY + 520 + i * 46, {
+        scale: 3,
+        color: '#d8dce8',
+        align: 'center',
+      });
+    });
+
+    this.renderButtons(ctx, game, panelY + panelH - 110);
   }
 
   renderPauseOverlay(ctx, game) {

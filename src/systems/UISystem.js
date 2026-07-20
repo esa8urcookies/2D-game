@@ -117,6 +117,57 @@ export class UISystem {
       align: 'center',
     });
     drawBar(ctx, x, 168, width, 26, boss.health / boss.maxHealth, '#e04040', 4);
+
+    // While the boss is off screen, point an arrow at it from the
+    // edge so the player can always find it.
+    const screen = game.camera.worldToScreen(boss.x, boss.y);
+    const pad = 90;
+    const onScreen =
+      screen.x > pad && screen.x < GAME_WIDTH - pad &&
+      screen.y > pad && screen.y < GAME_HEIGHT - pad;
+    if (!onScreen) {
+      this.drawBossArrow(ctx, screen);
+    }
+  }
+
+  /** A red arrow at the screen edge, aimed toward the off-screen boss. */
+  drawBossArrow(ctx, bossScreen) {
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+    const angle = Math.atan2(bossScreen.y - cy, bossScreen.x - cx);
+
+    // Clamp the marker to a rounded band just inside the screen edge.
+    const rx = GAME_WIDTH / 2 - 80;
+    const ry = GAME_HEIGHT / 2 - 80;
+    const ex = cx + Math.cos(angle) * rx;
+    const ey = cy + Math.sin(angle) * ry;
+
+    ctx.save();
+    ctx.translate(ex, ey);
+    ctx.rotate(angle);
+
+    // Pulsing red triangle pointing outward (toward the boss).
+    const pulse = 0.7 + 0.3 * Math.sin(this.warningPhase * 6);
+    ctx.globalAlpha = pulse;
+    ctx.fillStyle = '#e04040';
+    ctx.strokeStyle = '#16161f';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(34, 0);
+    ctx.lineTo(-18, -24);
+    ctx.lineTo(-18, 24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // "BOSS" label just inside the arrow.
+    drawPixelText(ctx, 'BOSS', cx + Math.cos(angle) * (rx - 70), cy + Math.sin(angle) * (ry - 70), {
+      scale: 3,
+      color: '#e04040',
+      outline: '#16161f',
+      align: 'center',
+    });
   }
 
   /**
@@ -169,16 +220,29 @@ export class UISystem {
     for (const weapon of game.weapons.owned) {
       const y = 92 + row * 42;
       const evolved = weapon.def.evolved;
-      const label = evolved ? 'EVO' : weapon.isMaxLevel ? 'MAX' : `LV${weapon.level}`;
 
-      ctx.fillStyle = evolved ? '#b388ff' : '#16161f';
+      // Ready to evolve: max level + the required passive is owned.
+      // A chest will then evolve it — tell the player so.
+      const readyToEvolve =
+        !evolved && weapon.def.evolvesInto && weapon.isMaxLevel &&
+        (game.passives[weapon.def.evolutionRequires] || 0) > 0;
+
+      const label = evolved
+        ? 'EVO'
+        : readyToEvolve
+          ? 'READY!'
+          : weapon.isMaxLevel
+            ? 'MAX'
+            : `LV${weapon.level}`;
+
+      ctx.fillStyle = evolved ? '#b388ff' : readyToEvolve ? '#5cd65c' : '#16161f';
       ctx.fillRect(24, y, 26, 26);
       ctx.fillStyle = weapon.def.color;
       ctx.fillRect(28, y + 4, 18, 18);
 
       drawPixelText(ctx, `${weapon.def.short} ${label}`, 64, y + 2, {
         scale: 3,
-        color: evolved ? '#ffd54f' : '#e8ecf4',
+        color: evolved ? '#ffd54f' : readyToEvolve ? '#5cd65c' : '#e8ecf4',
         outline: '#16161f',
       });
       row += 1;
