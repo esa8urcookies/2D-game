@@ -8,7 +8,7 @@
 
 import { WEAPON_DEFS } from '../config/Weapons.js';
 import { PASSIVE_DEFS, FALLBACK_CHOICES } from '../config/Passives.js';
-import { drawPixelText } from '../assets/PixelFont.js';
+import { drawPixelText, measurePixelText } from '../assets/PixelFont.js';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
 const GOLD = '#ffd54f';
@@ -239,15 +239,47 @@ export class UpgradeSystem {
       outline: OUTLINE,
       align: 'center',
     });
-    drawPixelText(ctx, choice.description, centerX, y + 190, {
-      scale: 4,
-      color: '#e8ecf4',
-      align: 'center',
+
+    // Description wraps to fit the card so long effects never spill
+    // over the edge; the block stays vertically centered.
+    const lines = wrapText(choice.description, 4, CARD_W - 48);
+    const lineHeight = 46;
+    const blockTop = y + 210 - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach((line, i) => {
+      drawPixelText(ctx, line, centerX, blockTop + i * lineHeight, {
+        scale: 4,
+        color: '#e8ecf4',
+        align: 'center',
+      });
     });
-    drawPixelText(ctx, choice.tag, centerX, y + 290, {
+
+    drawPixelText(ctx, choice.tag, centerX, y + 310, {
       scale: 4,
       color: choice.tagColor,
       align: 'center',
     });
   }
+}
+
+/**
+ * Break text into lines that each fit within maxWidth (in pixels) at
+ * the given pixel-font scale. Greedy word wrap; a single word wider
+ * than the card is left on its own line rather than split.
+ */
+function wrapText(text, scale, maxWidth) {
+  const words = String(text).split(' ');
+  const lines = [];
+  let current = '';
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (current && measurePixelText(candidate, scale) > maxWidth) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
 }
