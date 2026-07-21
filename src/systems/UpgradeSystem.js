@@ -231,9 +231,12 @@ export class UpgradeSystem {
       outline: OUTLINE,
     });
 
-    // Name, effect, and progress tag.
+    // Name: shrink a size if it would overflow the card width, so
+    // long names never spill past the edge either.
+    const inner = CARD_W - 48;
+    const nameScale = measurePixelText(choice.name, 5) > inner ? 4 : 5;
     drawPixelText(ctx, choice.name, centerX, y + 90, {
-      scale: 5,
+      scale: nameScale,
       color: GOLD,
       shadeColor: GOLD_DARK,
       outline: OUTLINE,
@@ -242,7 +245,7 @@ export class UpgradeSystem {
 
     // Description wraps to fit the card so long effects never spill
     // over the edge; the block stays vertically centered.
-    const lines = wrapText(choice.description, 4, CARD_W - 48);
+    const lines = wrapText(choice.description, 4, inner);
     const lineHeight = 46;
     const blockTop = y + 210 - ((lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, i) => {
